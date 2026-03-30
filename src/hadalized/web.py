@@ -1,9 +1,10 @@
-"""Named CSS Colors."""
+"""Named CSS Colors as oklch values."""
 
-from hadalized.color import ColorField, ColorMap
+from hadalized.base import BaseNode
+from hadalized.color import ColorField  # noqa: TC001
 
 
-class CSSNamedColors(ColorMap):
+class CSSNamedColors(BaseNode):
     """Standard CSS named colors as ColorInfo objects.
 
     Generally there is only a single instance of this class,

@@ -62,11 +62,16 @@ just test
 ## Roadmap / TODOs
 
 - [ ] Consider removing the "in-memory" cache functionality.
-- [ ] (A) Add ability to map named colors such as `red` to an abstracted name
-  such as `color1`, similar to `base16`. Use these abstracted names color theme
-  templates. This might be painful to work with in practice, as one has to keep
-  the mapping in their head.
 - [ ] (B) As an extension of (A), consider lightweight pandoc inspired features
   where an intermediate and generic theme can be defined and referenced in
   editor templates. For example, allow a user to define `integer = "blue"` and
   reference `theme.integer` to color neovim `Integer` highlight groups.
+- [ ]
+
+## References
+
+VSCode, having perhaps more
+
+- https://code.visualstudio.com/api/references/theme-color
+- https://gist.github.com/AndreasBackx/ab5c7df0ef214a798cfa8fdeaf59197f
+- https://gist.github.com/dcts/5b2af4c8b6918e7d35c4121f11d49fb1

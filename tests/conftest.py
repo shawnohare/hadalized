@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from hadalized.color import ColorRep, ColorSpace
 from hadalized.config import Config
 
 if TYPE_CHECKING:
@@ -25,12 +26,12 @@ def config(tmp_path) -> Config:
 
 @pytest.fixture
 def palette() -> Palette:
-    return _config.get_palette("dark").parse()
+    return _config.palettes["dark"].transform(ColorSpace.srgb, ColorRep.info)
 
 
 @pytest.fixture
 def raw_palette() -> Palette:
-    return _config.get_palette("dark")
+    return _config.palettes["dark"]
 
 
 @pytest.fixture

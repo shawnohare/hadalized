@@ -1,0 +1,81 @@
+{% set thm = context -%}
+{% set pal = thm.palette -%}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colors for {{thm.fullname}}</title>
+</head>
+
+<style>
+.box {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0, 0, 0, .2);
+}
+
+table {
+  table-layout: fixed;
+  width: 50%;
+  margin: 10px auto;
+  border-collapse: collapse;
+  border: 1px solid #999999
+  /* border-top: 1px solid #999999; */
+  /* border-bottom: 1px solid #999999; */
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #eeeeee;
+}
+
+</style>
+
+<h1>Theme Metadata for {{ thm.name }}</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for field, value in thm.meta() -%}
+    <tr>
+      <td>{{ field }}</td>
+      <td>{{ value }}</td>
+    </tr>
+    {% endfor -%}
+  </tbody>
+</table>
+
+<h1>Theme Colors for {{ thm.name }}</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Color</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for field, color in thm.colors() -%}
+    <tr>
+        <td>{{ field }}</td>
+        <td><div class="box" style="background: {{ color }}"/></td>
+    </tr>
+    {% endfor -%}
+    {% for field, style in thm.styles() -%}
+    <tr>
+        <td>{{ field }}.fg</td>
+        <td><div class="box" style="background: {{ style.fg }}"/></td>
+    </tr>
+    <tr>
+        <td>{{ field }}.bg</td>
+        <td><div class="box" style="background: {{ style.bg }}"/></td>
+    </tr>
+    {% endfor -%}
+  </tbody>
+</table>

@@ -8,7 +8,8 @@ from hadalized.config import Options, load_config
 from hadalized.writer import ThemeWriter
 
 config = load_config(Options(no_config=True))
-palette = config.get_palette("hadalized")
+palette = config.palettes["dark"]
+theme = config.themes["default"]
 template = ThemeWriter(config).get_template("neovim.lua")
 if not template:
     raise RuntimeError("Unable to load builtin template.")

@@ -3,14 +3,14 @@ from pathlib import Path
 import pytest
 from jinja2.exceptions import TemplateNotFound
 
-from hadalized.config import BuildConfig, Config, ContextType, Options
+from hadalized.config import BuildConfig, Config, ContextType
 from hadalized.writer import ThemeWriter
 
 
 def test_writer_full_context(config: Config):
     build = BuildConfig(
         name="test",
-        template=Path("template.txt"),
+        template=Path("template.txt.j2"),
         context_type=ContextType.full,
     )
     with ThemeWriter(config) as writer:
@@ -29,7 +29,7 @@ def test_build_with_copy(config: Config, build_config):
     with ThemeWriter(config) as writer:
         writer.build(build_config)
         assert config.output_dir is not None
-        assert (config.output_dir / "hadalized.lua").exists()
+        assert (config.output_dir / "neovim" / "hadalized-dark.lua").exists()
 
 
 def test_writer_exits_with_exception(config: Config):
@@ -42,10 +42,10 @@ def test_writer_get_package_template(config: Config):
 
 
 def test_writer_get_fs_template(config: Config):
-    assert ThemeWriter(config).get_template("template.txt")
+    assert ThemeWriter(config).get_template("template.txt.j2")
 
 
-def test_writer_get_template_fail(config: Config):
-    config |= Options(no_templates=True)
+def test_writer_get_template_fail():
+    config = Config(no_templates=True)
     with pytest.raises(TemplateNotFound):
         ThemeWriter(config).get_template("bomb")

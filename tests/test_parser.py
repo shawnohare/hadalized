@@ -1,10 +1,10 @@
 import pytest
 
-from hadalized.color import Parser, parse
+from hadalized.color import ColorSpace, Parser, parse
 
 
 def test_parse_oklch():
-    parser = Parser("srgb")
+    parser = Parser()
     val = "oklch(0.5 0.1 25)"
     info = parser(val)
     assert info.oklch == val
@@ -23,17 +23,24 @@ def test_parse_fail():
 @pytest.mark.parametrize(
     ("val", "gamut", "in_gamut"),
     [
-        ("oklch(0.60 0.4 25)", "srgb", False),
-        ("oklch(0.60 0.1 25)", "srgb", True),
+        ("oklch(0.60 0.4 25)", ColorSpace.srgb, False),
+        ("oklch(0.60 0.1 25)", ColorSpace.srgb, True),
     ],
 )
-def test_in_gamut(val: str, gamut: str, in_gamut: bool):
+def test_in_gamut(val: str, gamut: ColorSpace, in_gamut: bool):
     color = parse(val, gamut=gamut)
     assert color.is_in_gamut is in_gamut
 
 
 def test_max_oklch():
-    parser = Parser("srgb")
+    parser = Parser(ColorSpace.srgb)
     val = "oklch(0.5 0.5 25)"
     color = parser(val).color().convert("srgb")
     assert parser._max_oklch_chroma(color) < 0.5
+
+
+def test_parse_info():
+    val = "oklch(0.5 0.5 25)"
+    color_info = parse(val, gamut=ColorSpace.srgb)
+    color = parse(color_info, gamut=ColorSpace.display_p3)
+    assert color.gamut == ColorSpace.display_p3

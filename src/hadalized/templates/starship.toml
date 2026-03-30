@@ -38,7 +38,7 @@ $cmd_duration\
 $line_break\
 $character"""
 
-palette = "hadalized"
+palette = "hadalized-dark"
 
 [env_var.STARSHIP_SHELL]
 style = "bg:rose fg:bg"
@@ -218,16 +218,16 @@ disabled = false
 show_notifications = true
 min_time_to_notify = 45000
 
-{% for palette in context.palettes.values() %}
-[palettes."{{palette.name}}"]
-name = "{{ palette.name }}"
-gamut = "{{ palette.gamut }}"
-mode = "{{ palette.mode }}"
-{% for name, code in palette.hue -%}
-{{name}} = "{{code}}"
+{% for thm in context.themes %}
+{% set pal = thm.palette-%}
+[palettes."{{ thm.fullname }}"]
+name = "{{ thm.fullname }}"
+mode = "{{ pal.mode }}"
+gamut = "{{ build.gamut }}"
+{% for field, color in thm.colors()-%}
+{{ field }} = "{{ color }}"
 {% endfor -%}
-{% for name, code in palette.base -%}
-{{ name }} = "{{code}}"
+{% for field, color in pal.colors()-%}
+{{ field }} = "{{ color }}"
 {% endfor -%}
 {% endfor %}
-

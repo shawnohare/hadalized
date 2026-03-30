@@ -1,10 +1,10 @@
-from hadalized import homedirs
+from hadalized.base import Home
 
 
 def test_homedirs():
-    assert homedirs.build()
-    assert homedirs.cache()
-    assert homedirs.config()
-    assert homedirs.template()
-    assert homedirs.state()
-    assert homedirs.data()
+    assert Home.build()
+    assert Home.cache()
+    assert Home.config()
+    assert Home.template()
+    assert Home.state()
+    assert Home.data()

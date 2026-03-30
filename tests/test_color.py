@@ -1,7 +1,7 @@
 import pytest
 from coloraide import Color
 
-from hadalized.color import ColorFieldType, ColorInfo, Extractor, parse
+from hadalized.color import ColorInfo, ColorRep, ColorSpace, Extractor, parse
 
 
 def test_color_info_color_method():
@@ -12,6 +12,7 @@ def test_color_info_color_method():
         oklch="",
         hex="",
         css="",
+        gamut=ColorSpace.srgb,
         is_in_gamut=True,
         max_oklch_chroma=0.5,
     )
@@ -24,6 +25,7 @@ def test_color_info_color_method_raises_error():
         oklch="",
         hex="",
         css="",
+        gamut=ColorSpace.srgb,
         is_in_gamut=True,
         max_oklch_chroma=0.5,
     )
@@ -33,12 +35,12 @@ def test_color_info_color_method_raises_error():
 
 def test_extractor():
     color = parse("oklch(0.5 0.2 25)")
-    ident = Extractor(ColorFieldType.info)
+    ident = Extractor(ColorRep.info)
     f_hex = Extractor("hex")
     assert ident(color) is color
     assert f_hex(color) == color.hex
-    assert Extractor("css")(color) == color.css
-    assert Extractor("oklch")(color) == color.oklch
+    assert Extractor(ColorRep.css)(color) == color.css
+    assert Extractor(ColorRep.oklch)(color) == color.oklch
 
 
 def test_extractor_type_error():

@@ -8,7 +8,7 @@ from loguru import logger
 if TYPE_CHECKING:
     from pathlib import Path
 
-from hadalized.options import Options
+from hadalized.config import Options
 
 
 class Cache:

@@ -6,8 +6,9 @@ from shutil import rmtree
 
 from cyclopts import App
 
-from hadalized import homedirs
+from hadalized.base import Home
 from hadalized.cache import Cache
+from hadalized.color import ColorRep, ColorSpace
 from hadalized.config import Config, Options, load_config
 from hadalized.writer import ThemeWriter
 
@@ -17,59 +18,44 @@ config_app = app.command(
     App(name="config", help="Interact with the application config.")
 )
 palette_app = app.command(App(name="palette", help="Interact with palettes."))
+theme_app = app.command(App(name="theme", help="Interact with universal themes."))
 state_app = app.command(
     App(name="state", help="Interact with the application state, e.g., built files.")
 )
 
+BUILD_DEFAULTS: Options = Options(output_dir=Path("build"))
+
 
 @app.command
-def build(name: str | None = None, opt: Options | None = None):
+def build(opt: Options | None = None):
     """Build application color themes files.
 
     When no applications or palette is specified, themes will be built for all
-    application and palette pairs, and copied to subdirs in `./build`.
-
-    When a single application name is specified, such as `neovim`, the theme
-    files will be built and dumped directly into `./build`, by default.
+    application, abstract theme, and palette pairs, and copied to subdirs in
+    `./build`.
 
     Usage examples:
     - hdl build -> build/**/*
-    - hld build neovim -> build/hadalized*.lua
-    - hdl build neovim --out=colors -> colors/hadalized*.lua
+    - hdl build --app=neovim --out=putcolors --no-prefix -> colors/hadalized*.lua
     - hdl build --out=none -> Built themes only placed in app state dir.
 
     Args:
-        name: Target application to build. Use ``--app`` to include multiple.
         opt: Options.
 
     """
-    opt = opt or Options()
-    # Special default overrides for basic calls
-    if name is not None:
-        apps = [*opt.include_builds, name]
-        opt = Options(output_dir=Path("build")) | opt | Options(include_builds=apps)
-    else:
-        opt = Options(output_dir=Path("build"), prefix=True) | opt
+    opt = BUILD_DEFAULTS | (opt or Options())
+    config = load_config(opt)
+
     if opt.verbose:
         from rich import print_json
 
         print(f"opt fields set {opt.model_fields_set}")
         print("Options:")
         print_json(opt.model_dump_json())
-    config = load_config(opt)
-    if config.dry_run:
+    if opt.dry_run:
         print("DRY-RUN. No theme files will be generated or copied.")
     with ThemeWriter(config) as writer:
         writer.run()
-
-
-# @config_app.command(name="info")
-# def config_info(opt: Options | None = None):
-#     """Dispaly configuration info."""
-#     from rich import print_json
-#
-#     config = load_config(opt)
-#     print_json(config.model_dump_json())
 
 
 @config_app.command(name="schema")
@@ -94,7 +80,7 @@ def config_init(opts: Options | None = None):
     if str(config.output_dir) == "stdout":
         print(toml.dumps(config.model_dump(mode="json", exclude_none=True)))
         return
-    output = config.output_dir or homedirs.config()
+    output = config.output_dir or Home.config()
     if output.suffix != ".toml":
         output /= "config.toml"
 
@@ -125,32 +111,32 @@ def config_options(opts: Options | None = None):
     print_json(config.opt.model_dump_json())
 
 
-@palette_app.command(name="parse")
-def palette_parse(
-    name: str = "hadalized",
-    *,
-    gamut: str | None = None,
+@palette_app.command(name="show")
+def palette_show(
+    gamut: ColorSpace = ColorSpace.srgb,
+    rep: ColorRep = ColorRep.info,
     opt: Options | None = None,
 ):
     """Show information about a particular palette.
 
+    Usage examples:
+    - hdl palette show --palette="dark"
+    - hdl palette show display-p3 hex --palette="dark"
+
     Args:
-        name: Palette name or alias, e.g., "hadalized".
         gamut: A specifed gamut to parse against. If not provided, the
             gamut defined by the palette is used.
+        rep: Color representation.
         opt: Options
 
     """
-    # TODO: Respect user config.
     from rich import print_json
 
     opt = opt or Options()
     config = load_config(opt)
-    for item in [name, *config.include_palettes]:
-        palette = config.get_palette(item)
-        if gamut is not None:
-            palette = palette.replace(gamut=gamut)
-        print_json(palette.parse().model_dump_json())
+    for name in opt.include_palettes:
+        palette = config._palette_lu[name].transform(gamut, rep)
+        print_json(palette.model_dump_json())
 
 
 @cache_app.command(name="clean")
@@ -230,6 +216,40 @@ def clean(opt: Options | None = None):
     """Clean cache and state files."""
     cache_clean(opt)
     state_clean(opt)
+
+
+@theme_app.command(name="show")
+def theme_show(
+    gamut: ColorSpace = ColorSpace.srgb,
+    rep: ColorRep = ColorRep.info,
+    opt: Options | None = None,
+):
+    """Show information about a particular theme.
+
+    Usage examples:
+    - hdl theme show --palette="dark" --theme="hadalized"
+    - hdl theme parse display-p3 hex --palette="dark" --theme="hadalized"
+
+    Args:
+        gamut: A specifed gamut to parse against. If not provided, the
+            gamut defined by the palette is used.
+        rep: Color representation.
+        opt: Options
+
+    """
+    from rich import print_json
+
+    opt = opt or Options()
+    config = load_config(opt)
+    for abs_theme, palette in config.pairs():
+        theme = abs_theme.make(palette.transform(gamut, rep))
+        jdata = theme.model_dump_json(exclude_none=True, indent=4)
+        if not opt.output_dir:
+            print_json(jdata)
+        else:
+            fname = f"{theme.fullname}.json"
+            with (opt.output_dir / fname).open("w") as fp:
+                fp.write(jdata)
 
 
 # @app.command
