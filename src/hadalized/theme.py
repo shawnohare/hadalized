@@ -874,6 +874,8 @@ class ThemeBlocks(BaseNode):
     dianostic_virtual_lines_ok: Diagnostic = Diagnostic(link=Link.diagnostic_ok)
     # end: diagnostic
 
+    # TODO: Maybe remove elements linked to TS and add new ones that provide more
+    # nuance. This means that lsp logic is handled in mapping layer.
     # begin: lsp
     lsp_reference_text: Lsp = Lsp()
     """Used for highlighting "text" references"""
@@ -892,7 +894,7 @@ class ThemeBlocks(BaseNode):
     """Reference a class type."""
     lsp_type_comment: Lsp = Lsp()
     """Tokens that represent a comment."""
-    lsp_type_decorator: Lsp = Lsp()
+    lsp_type_decorator: Lsp = Lsp(link=Link.attribute)
     """Reference an annotation or decorator."""
     lsp_type_enum: Lsp = Lsp()
     """Reference to an enumeration type."""
@@ -902,40 +904,42 @@ class ThemeBlocks(BaseNode):
     """Reference to an event property."""
     lsp_type_function: Lsp = Lsp(link=Link.function)
     lsp_type_interface: Lsp = Lsp()
-    lsp_type_keyword: Lsp = Lsp()
+    lsp_type_keyword: Lsp = Lsp(link=Link.keyword)
+    """Tokens that represent a language keyword."""
     lsp_type_macro: Lsp = Lsp()
-    lsp_type_method: Lsp = Lsp()
-    lsp_type_modifier: Lsp = Lsp()
-    lsp_type_namespace: Lsp = Lsp()
-    lsp_type_number: Lsp = Lsp()
-    lsp_type_operator: Lsp = Lsp()
-    lsp_type_parameter: Lsp = Lsp()
-    lsp_type_property: Lsp = Lsp()
+    lsp_type_method: Lsp = Lsp(link=Link.function_method)
+    lsp_type_modifier: Lsp = Lsp(link=Link.keyword_modifier)
+    lsp_type_namespace: Lsp = Lsp(link=Link.module)
+    lsp_type_number: Lsp = Lsp(link=Link.number)
+    lsp_type_operator: Lsp = Lsp(link=Link.operator)
+    lsp_type_parameter: Lsp = Lsp(link=Link.variable_parameter)
+    lsp_type_property: Lsp = Lsp(link=Link.property)
     lsp_type_regexp: Lsp = Lsp(link=Link.string_regexp)
-    lsp_type_string: Lsp = Lsp()
+    lsp_type_string: Lsp = Lsp(link=Link.string)
     lsp_type_struct: Lsp = Lsp()
-    lsp_type_type: Lsp = Lsp()
+    """Identifiers that declare or reference a struct."""
+    lsp_type_type: Lsp = Lsp(link=Link.keyword_type)
     lsp_type_type_parameter: Lsp = Lsp()
-    lsp_type_variable: Lsp = Lsp()
-    lsp_mod_abstract: Lsp = Lsp()
+    lsp_type_variable: Lsp = Lsp(link=Link.variable)
+    lsp_mod_abstract: Lsp = Lsp(fg=R.orange)
     """Types and methods that are abstract."""
-    lsp_mod_async: Lsp = Lsp()
+    lsp_mod_async: Lsp = Lsp(link=Link.keyword_coroutine)
     """Functions that are marked async."""
-    lsp_mod_declaration: Lsp = Lsp()
+    lsp_mod_declaration: Lsp = Lsp(fg=R.magenta)
     """Declaration of symbols."""
-    lsp_mod_default_library: Lsp = Lsp()
+    lsp_mod_default_library: Lsp = Lsp(link=Link.module_builtin)
     """Symbols that are part of the standard library."""
-    lsp_mod_definition: Lsp = Lsp()
+    lsp_mod_definition: Lsp = Lsp(fg=R.blue)
     """Definitions of files, (e.g., in header files)."""
-    lsp_mod_deprecated: Lsp = Lsp()
+    lsp_mod_deprecated: Lsp = Lsp(link=Link.diagnostic_deprecated)
     """Symbols that should no longer be used."""
-    lsp_mod_documentation: Lsp = Lsp()
+    lsp_mod_documentation: Lsp = Lsp(fg=R.yellow)
     """Occurrences of symbols in documentation."""
-    lsp_mod_modification: Lsp = Lsp()
+    lsp_mod_modification: Lsp = Lsp(fg=R.green)
     """Variable references where the variable is assigned to."""
-    lsp_mod_readonly: Lsp = Lsp()
+    lsp_mod_readonly: Lsp = Lsp(fg=R.red)
     """Readonly variables and fields (constants)."""
-    lsp_mod_static: Lsp = Lsp()
+    lsp_mod_static: Lsp = Lsp(fg=R.)
     """Static class members."""
 
     # begin: neovim groups.
