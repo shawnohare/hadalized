@@ -2,11 +2,19 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from hadalized.theme import AbstractTheme, Color, Diagnostic, Link, Treesitter
+from hadalized.palette import Palette, PaletteMetadata
+from hadalized.theme import AbstractTheme, Color, Diagnostic, T, Hue, ThemeBlocks, Treesitter
 
 if TYPE_CHECKING:
-    from hadalized.palette import Palette
     from hadalized.theme import BaseStyle
+
+
+def test_link_enum_contains_all_theme_fields():
+    assert len(T) == len(ThemeBlocks.model_fields)
+
+
+def test_palette_field_enum_contains_all_palette_fields():
+    assert len(Hue) == len(Palette.model_fields) - len(PaletteMetadata.model_fields)
 
 
 def test_link_resolution(palette: Palette):
@@ -15,8 +23,8 @@ def test_link_resolution(palette: Palette):
 
     abstheme = AbstractTheme(
         name="test",
-        comment=Treesitter(link=Link.main),
-        ansi01=Color(link=Link.ansi00),
+        comment=Treesitter(link=T.main),
+        ansi01=Color(link=T.ansi00),
     )
     comment = abstheme._resolve_node(palette, abstheme.comment)
     main = abstheme._resolve_node(palette, abstheme.main)
@@ -30,9 +38,9 @@ def test_link_resolution_circular():
 
     abstheme = AbstractTheme(
         name="test",
-        ansi00=Color(link=Link.ansi01),
-        ansi01=Color(link=Link.ansi02),
-        ansi02=Color(link=Link.ansi00),
+        ansi00=Color(link=T.ansi01),
+        ansi01=Color(link=T.ansi02),
+        ansi02=Color(link=T.ansi00),
     )
     with pytest.raises(ValueError):
         abstheme._resolve_links(abstheme.ansi02)

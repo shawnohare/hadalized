@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-class R(StrEnum):
+class Hue(StrEnum):
     """Palette field references."""
 
     red = auto()
@@ -88,7 +88,7 @@ class R(StrEnum):
     white = auto()
 
 
-type PaletteField = R
+type PaletteField = Hue
 """More descriptive alias."""
 
 
@@ -142,7 +142,7 @@ class Refs(BaseNode):
 class BaseStyle(BaseNode):
     """Base linkable object for style elements."""
 
-    link: Link | None = None
+    link: T | None = None
     """Specifies that the instance's values should be merged into the
     linked style."""
     exclude: bool = False
@@ -223,6 +223,10 @@ class Style(BaseStyle):
     a concrete color field from a palette after resolution."""
 
 
+class Syntax(Style):
+    """Indicates code syntax highlight group."""
+
+
 class UI(Style):
     """UI elements with additional fields.
 
@@ -254,6 +258,7 @@ class Diagnostic(Style):
 class Lsp(Style):
     """Node belongs to LSP components.
 
+    cf. https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/
     cf. https://microsoft.github.io/language-server-protocol/specification#textDocument_documentHighlight
     cf. in neovim `h: lsp-highlight`
     """
@@ -321,10 +326,9 @@ class ThemeMetadata(BaseNode):
         return super().__hash__()
 
 
-class Link(StrEnum):
+class T(StrEnum):
     """Theme field names that can be linked to."""
 
-    # visual_nos = auto()
     # pmenu = auto()
     # pmenu_extra = auto()
     # pmenu_extra_sel = auto()
@@ -335,6 +339,41 @@ class Link(StrEnum):
     # pmenu_sbar = auto()
     # pmenu_sel = auto()
     # pmenu_thumb = auto()
+    # visual_nos = auto()
+    # # LSP values that are essentially duplicate or renamed more generically.
+    # lsp_mod_abstract = auto()
+    # lsp_mod_async = auto()
+    # lsp_mod_declaration = auto()
+    # lsp_mod_default_library = auto()
+    # lsp_mod_definition = auto()
+    # lsp_mod_deprecated = auto()
+    # lsp_mod_documentation = auto()
+    # lsp_mod_modification = auto()
+    # lsp_mod_readonly = auto()
+    # lsp_mod_static = auto()
+    # lsp_type_class = auto()
+    # lsp_type_comment = auto()
+    # lsp_type_decorator = auto()
+    # lsp_type_enum = auto()
+    # lsp_type_enum_member = auto()
+    # lsp_type_event = auto()
+    # lsp_type_function = auto()
+    # lsp_type_interface = auto()
+    # lsp_type_keyword = auto()
+    # lsp_type_macro = auto()
+    # lsp_type_method = auto()
+    # lsp_type_modifier = auto()
+    # lsp_type_namespace = auto()
+    # lsp_type_number = auto()
+    # lsp_type_operator = auto()
+    # lsp_type_parameter = auto()
+    # lsp_type_property = auto()
+    # lsp_type_regexp = auto()
+    # lsp_type_string = auto()
+    # lsp_type_struct = auto()
+    # lsp_type_type = auto()
+    # lsp_type_type_parameter = auto()
+    # lsp_type_variable = auto()
     ansi00 = auto()
     ansi01 = auto()
     ansi02 = auto()
@@ -375,6 +414,7 @@ class Link(StrEnum):
     cursor_line_fold = auto()
     cursor_line_gutter = auto()
     cursor_line_number = auto()
+    declaration = auto()
     diagnostic_deprecated = auto()
     diagnostic_error = auto()
     diagnostic_hint = auto()
@@ -411,6 +451,9 @@ class Link(StrEnum):
     diff_minus = auto()
     diff_plus = auto()
     end_of_buffer = auto()
+    enum = auto()
+    enum_member = auto()
+    event_property = auto()
     floating_window = auto()
     floating_window_border = auto()
     floating_window_footer = auto()
@@ -424,6 +467,7 @@ class Link(StrEnum):
     function_method = auto()
     function_method_call = auto()
     gutter = auto()
+    interface = auto()
     keyword = auto()
     keyword_conditional = auto()
     keyword_conditional_ternary = auto()
@@ -445,44 +489,11 @@ class Link(StrEnum):
     line_number_below = auto()
     lsp_code_lens_separator = auto()
     lsp_inlay_hint = auto()
-    lsp_mod_abstract = auto()
-    lsp_mod_async = auto()
-    lsp_mod_declaration = auto()
-    lsp_mod_default_library = auto()
-    lsp_mod_definition = auto()
-    lsp_mod_deprecated = auto()
-    lsp_mod_documentation = auto()
-    lsp_mod_modification = auto()
-    lsp_mod_readonly = auto()
-    lsp_mod_static = auto()
     lsp_reference_read = auto()
     lsp_reference_target = auto()
     lsp_reference_text = auto()
     lsp_reference_write = auto()
     lsp_signature_active_parameter = auto()
-    lsp_type_class = auto()
-    lsp_type_comment = auto()
-    lsp_type_decorator = auto()
-    lsp_type_enum = auto()
-    lsp_type_enum_member = auto()
-    lsp_type_event = auto()
-    lsp_type_function = auto()
-    lsp_type_interface = auto()
-    lsp_type_keyword = auto()
-    lsp_type_macro = auto()
-    lsp_type_method = auto()
-    lsp_type_modifier = auto()
-    lsp_type_namespace = auto()
-    lsp_type_number = auto()
-    lsp_type_operator = auto()
-    lsp_type_parameter = auto()
-    lsp_type_property = auto()
-    lsp_type_regexp = auto()
-    lsp_type_string = auto()
-    lsp_type_struct = auto()
-    lsp_type_type = auto()
-    lsp_type_type_parameter = auto()
-    lsp_type_variable = auto()
     main = auto()
     main_unfocused = auto()
     markup_heading = auto()
@@ -537,6 +548,7 @@ class Link(StrEnum):
     spell_cap = auto()
     spell_local = auto()
     spell_rare = auto()
+    static_member = auto()
     status_line = auto()
     status_line_unfocused = auto()
     string = auto()
@@ -547,6 +559,7 @@ class Link(StrEnum):
     string_special_path = auto()
     string_special_symbol = auto()
     string_special_url = auto()
+    struct = auto()
     substitute = auto()
     tab_line = auto()
     tab_line_fill = auto()
@@ -561,9 +574,11 @@ class Link(StrEnum):
     type = auto()
     type_builtin = auto()
     type_definition = auto()
+    type_parameter = auto()
     variable = auto()
     variable_builtin = auto()
     variable_member = auto()
+    variable_modification = auto()
     variable_parameter = auto()
     variable_parameter_builtin = auto()
     whitespace = auto()
@@ -571,7 +586,6 @@ class Link(StrEnum):
     window_bar = auto()
     window_bar_unfocused = auto()
     window_separator = auto()
-
 
 class ThemeBlocks(BaseNode):
     """Theme style blocks and highlight groups.
@@ -586,143 +600,143 @@ class ThemeBlocks(BaseNode):
     - https://gist.github.com/dcts/5b2af4c8b6918e7d35c4121f11d49fb1
     """
 
-    ansi00: Color = color(R.black)
-    ansi01: Color = color(R.red)
-    ansi02: Color = color(R.green)
-    ansi03: Color = color(R.yellow)
-    ansi04: Color = color(R.blue)
-    ansi05: Color = color(R.magenta)
-    ansi06: Color = color(R.cyan)
-    ansi07: Color = color(R.silver)
-    ansi08: Color = color(R.smoke)
-    ansi09: Color = color(R.rose)
-    ansi10: Color = color(R.lime)
-    ansi11: Color = color(R.orange)
-    ansi12: Color = color(R.azure)
-    ansi13: Color = color(R.violet)
-    ansi14: Color = color(R.mint)
-    ansi15: Color = color(R.white)
+    ansi00: Color = color(Hue.black)
+    ansi01: Color = color(Hue.red)
+    ansi02: Color = color(Hue.green)
+    ansi03: Color = color(Hue.yellow)
+    ansi04: Color = color(Hue.blue)
+    ansi05: Color = color(Hue.magenta)
+    ansi06: Color = color(Hue.cyan)
+    ansi07: Color = color(Hue.silver)
+    ansi08: Color = color(Hue.smoke)
+    ansi09: Color = color(Hue.rose)
+    ansi10: Color = color(Hue.lime)
+    ansi11: Color = color(Hue.orange)
+    ansi12: Color = color(Hue.azure)
+    ansi13: Color = color(Hue.violet)
+    ansi14: Color = color(Hue.mint)
+    ansi15: Color = color(Hue.white)
 
     # Elements corresponding to fundamental foregrounds and backgrounds.
-    main: Style = Style(fg=R.base11, bg=R.base00)
+    main: Style = Style(fg=Hue.base11, bg=Hue.base00)
     """Main background and foreground. Similar to vim's Normal group."""
-    main_unfocused: Style = Style(fg=R.base11, bg=R.base00)
+    main_unfocused: Style = Style(fg=Hue.base11, bg=Hue.base00)
     """Normal text in inactive / non-current / unfocused windows."""
 
-    cursor: UI = UI(fg=R.base10, bg=R.base05, border=R.blue)
+    cursor: UI = UI(fg=Hue.base10, bg=Hue.base05, border=Hue.blue)
     """Cursor style (e.g., in terminal emulators).
 
     Note that in neovim in wezterm, it appears this value is inherited
     from the wezterm settings
     """
-    selection: Style = Style(bg=R.base03)
+    selection: Style = Style(bg=Hue.base03)
     """Selected areas, e.g., vim's Visual selection."""
 
     # begin: treesitter
-    attribute: Treesitter = Treesitter(fg=R.orange)
+    attribute: Treesitter = Treesitter(fg=Hue.orange)
     """Attribute annotations (e.g., Python decorators and Rust lifetimes)."""
-    attribute_builtin: Treesitter = Treesitter(fg=R.orange, italic=True)
+    attribute_builtin: Treesitter = Treesitter(fg=Hue.orange, italic=True)
     """Builtin annotations (e.g., `@property` in Python)."""
-    diff_delta: Treesitter = Treesitter(fg=R.yellow)
+    diff_delta: Treesitter = Treesitter(fg=Hue.yellow)
     """Changed text for diff files,"""
-    diff_minus: Treesitter = Treesitter(fg=R.red)
+    diff_minus: Treesitter = Treesitter(fg=Hue.red)
     """Deleted text for diff files,"""
-    diff_plus: Treesitter = Treesitter(fg=R.green)
+    diff_plus: Treesitter = Treesitter(fg=Hue.green)
     """Added text for diff files,"""
-    comment: Treesitter = Treesitter(fg=R.base09)
+    comment: Treesitter = Treesitter(fg=Hue.base09)
     """Line and block comments."""
-    comment_documentation: Treesitter = Treesitter(link=Link.string_documentation)
+    comment_documentation: Treesitter = Treesitter(link=T.string_documentation)
     """Comments that document code."""
-    comment_error: Treesitter = Treesitter(fg=R.red)
+    comment_error: Treesitter = Treesitter(fg=Hue.red)
     """Error type comments (e.g., `ERROR`, `FIXME`)."""
-    comment_warning: Treesitter = Treesitter(fg=R.orange)
+    comment_warning: Treesitter = Treesitter(fg=Hue.orange)
     """Warning type comments (e.g., `WARNING`, `FIX`, `HACK`)."""
-    comment_todo: Treesitter = Treesitter(fg=R.yellow)
+    comment_todo: Treesitter = Treesitter(fg=Hue.yellow)
     """Todo type comments (e.g., `TODO`, `WIP`)."""
-    comment_note: Treesitter = Treesitter(fg=R.blue)
+    comment_note: Treesitter = Treesitter(fg=Hue.blue)
     """Note type comments (e.g., `NOTE`, `INFO`, `xxx`)."""
 
-    constant: Treesitter = Treesitter(fg=R.magenta)
+    constant: Treesitter = Treesitter(fg=Hue.magenta)
     """Constant identifiers."""
-    constant_builtin: Treesitter = Treesitter(fg=R.magenta, italic=True)
+    constant_builtin: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
     """Builtin constant identifiers."""
-    constant_macro: Treesitter = Treesitter(fg=R.magenta, bold=True)
+    constant_macro: Treesitter = Treesitter(fg=Hue.magenta, bold=True)
     """Constants defined by a preprocessor."""
 
-    label: Treesitter = Treesitter(fg=R.orange)
+    label: Treesitter = Treesitter(fg=Hue.orange)
     """GOTO and other labels, including heredoc labels."""
-    module: Treesitter = Treesitter(fg=R.lime, bold=True)
+    module: Treesitter = Treesitter(fg=Hue.lime, bold=True)
     """Modules or namespace."""
-    module_builtin: Treesitter = Treesitter(fg=R.magenta, italic=True, bold=True)
+    module_builtin: Treesitter = Treesitter(fg=Hue.magenta, italic=True, bold=True)
     """Builtin or stdlib modules and namespaces."""
 
     # Basic types.
-    character: Treesitter = Treesitter(fg=R.cyan)
+    character: Treesitter = Treesitter(fg=Hue.cyan)
     """Character literals."""
-    character_special: Treesitter = Treesitter(fg=R.red)
+    character_special: Treesitter = Treesitter(fg=Hue.red)
     """Special characters, (e.g., wildcards)."""
-    boolean: Treesitter = Treesitter(fg=R.lime, italic=True)
+    boolean: Treesitter = Treesitter(fg=Hue.lime, italic=True)
     """Boolean literals."""
-    number: Treesitter = Treesitter(fg=R.rose)
+    number: Treesitter = Treesitter(fg=Hue.rose)
     """Numeric literals."""
-    number_float: Treesitter = Treesitter(fg=R.magenta)
+    number_float: Treesitter = Treesitter(fg=Hue.magenta)
     """Floating point literals."""
-    type: Treesitter = Treesitter(fg=R.violet)
+    type: Treesitter = Treesitter(fg=Hue.violet)
     """Type or class definitions and annotations."""
-    type_builtin: Treesitter = Treesitter(fg=R.magenta)
+    type_builtin: Treesitter = Treesitter(fg=Hue.magenta)
     """Builtin types."""
-    type_definition: Treesitter = Treesitter(fg=R.violet)
+    type_definition: Treesitter = Treesitter(fg=Hue.violet)
     """Identifiers in type definitions (e.g., typedef <type> <identifier>)."""
-    operator: Treesitter = Treesitter(fg=R.azure)
+    operator: Treesitter = Treesitter(fg=Hue.azure)
     """Symbolic operators, (e.g., `+` and `*`)."""
-    property: Treesitter = Treesitter(fg=R.yellow)
+    property: Treesitter = Treesitter(fg=Hue.yellow)
     """The key in key, value pairs."""
 
     # functions
-    function: Treesitter = Treesitter(fg=R.blue)
+    function: Treesitter = Treesitter(fg=Hue.blue)
     """Function definitions."""
-    function_builtin: Treesitter = Treesitter(fg=R.magenta)
+    function_builtin: Treesitter = Treesitter(fg=Hue.magenta)
     """Functions provided by the stdlib."""
-    function_call: Treesitter = Treesitter(link=Link.function)
+    function_call: Treesitter = Treesitter(link=T.function)
     """Function calls (e.g., `myfunc(x)`)."""
-    function_macro: Treesitter = Treesitter(fg=R.orange)
+    function_macro: Treesitter = Treesitter(fg=Hue.orange)
     """Preprocessor macros."""
-    function_method: Treesitter = Treesitter(fg=R.blue)
+    function_method: Treesitter = Treesitter(fg=Hue.blue)
     """Method definitions."""
-    function_method_call: Treesitter = Treesitter(link=Link.function_method)
+    function_method_call: Treesitter = Treesitter(link=T.function_method)
     """Method calls."""
-    constructor: Treesitter = Treesitter(fg=R.azure)
+    constructor: Treesitter = Treesitter(fg=Hue.azure)
     """Constructor calls and definitions."""
 
-    keyword: Treesitter = Treesitter(fg=R.violet)
+    keyword: Treesitter = Treesitter(fg=Hue.violet)
     """Keywords not fitting into specific categories."""
-    keyword_coroutine: Treesitter = Treesitter(fg=R.magenta)
+    keyword_coroutine: Treesitter = Treesitter(fg=Hue.magenta)
     """Keywords related to async (e.g., `go` in Go, `async/await` in Python)."""
-    keyword_function: Treesitter = Treesitter(fg=R.violet, italic=True)
+    keyword_function: Treesitter = Treesitter(fg=Hue.violet, italic=True)
     """Keywords that define a function (e.g. `func` in Go, `def` in Python)."""
-    keyword_operator: Treesitter = Treesitter(fg=R.azure)
+    keyword_operator: Treesitter = Treesitter(fg=Hue.azure)
     """Operators that are english words (e.g., `and`, `or`)."""
-    keyword_import: Treesitter = Treesitter(fg=R.rose)
+    keyword_import: Treesitter = Treesitter(fg=Hue.rose)
     """Keywords for including or exporting modules (e.g., `import` in Python)."""
-    keyword_type: Treesitter = Treesitter(fg=R.rose, italic=True)
+    keyword_type: Treesitter = Treesitter(fg=Hue.rose, italic=True)
     """Keywords describing namespaces and composite types (e.g. `struct`, `enum`)."""
-    keyword_modifier: Treesitter = Treesitter(fg=R.mint)
+    keyword_modifier: Treesitter = Treesitter(fg=Hue.mint)
     """Keywords modifying other constructs (e.g. `const`, `static`, `public`)."""
-    keyword_repeat: Treesitter = Treesitter(fg=R.lime)
+    keyword_repeat: Treesitter = Treesitter(fg=Hue.lime)
     """Keywords related to loops (e.g., `for`, `while`)."""
-    keyword_return: Treesitter = Treesitter(fg=R.red)
+    keyword_return: Treesitter = Treesitter(fg=Hue.red)
     """Keywords like `return` and `yield`."""
-    keyword_debug: Treesitter = Treesitter(fg=R.red)
+    keyword_debug: Treesitter = Treesitter(fg=Hue.red)
     """Keywords related to debugging."""
-    keyword_exception: Treesitter = Treesitter(fg=R.violet)
+    keyword_exception: Treesitter = Treesitter(fg=Hue.violet)
     """Keywords related to exception handling (e.g., `throw`, `catch`)."""
-    keyword_conditional: Treesitter = Treesitter(fg=R.mint)
+    keyword_conditional: Treesitter = Treesitter(fg=Hue.mint)
     """Keywords related to conditional logic (e.g., `if`, `else`)."""
-    keyword_conditional_ternary: Treesitter = Treesitter(fg=R.mint)
+    keyword_conditional_ternary: Treesitter = Treesitter(fg=Hue.mint)
     """Ternary operator (e.g., `?`, `;`)."""
-    keyword_directive: Treesitter = Treesitter(fg=R.yellow)
+    keyword_directive: Treesitter = Treesitter(fg=Hue.yellow)
     """Various preprocessor directives and shebangs."""
-    keyword_directive_define: Treesitter = Treesitter(fg=R.orange)
+    keyword_directive_define: Treesitter = Treesitter(fg=Hue.orange)
     """Preprocessor definition directives."""
 
     markup_strong: Treesitter = Treesitter(bold=True)
@@ -735,154 +749,154 @@ class ThemeBlocks(BaseNode):
     """Underlined text in markup."""
     markup_heading: Treesitter = Treesitter(underdouble=True)
     """Headings and titles, including markers (e.g, `#` in markdown)."""
-    markup_heading_1: Treesitter = Treesitter(fg=R.red, bold=True)
+    markup_heading_1: Treesitter = Treesitter(fg=Hue.red, bold=True)
     """Top-level heading."""
-    markup_heading_2: Treesitter = Treesitter(fg=R.orange, bold=True)
+    markup_heading_2: Treesitter = Treesitter(fg=Hue.orange, bold=True)
     """Second-level heading."""
-    markup_heading_3: Treesitter = Treesitter(fg=R.yellow, bold=True)
+    markup_heading_3: Treesitter = Treesitter(fg=Hue.yellow, bold=True)
     """Third-level heading."""
-    markup_heading_4: Treesitter = Treesitter(fg=R.lime, bold=True)
+    markup_heading_4: Treesitter = Treesitter(fg=Hue.lime, bold=True)
     """Fourth-level heading."""
-    markup_heading_5: Treesitter = Treesitter(fg=R.green, bold=True)
+    markup_heading_5: Treesitter = Treesitter(fg=Hue.green, bold=True)
     """Fifth-level heading."""
-    markup_heading_6: Treesitter = Treesitter(fg=R.mint, bold=True)
+    markup_heading_6: Treesitter = Treesitter(fg=Hue.mint, bold=True)
     """Sixth-level heading."""
-    markup_quote: Treesitter = Treesitter(fg=R.azure, italic=True)
+    markup_quote: Treesitter = Treesitter(fg=Hue.azure, italic=True)
     """Block quotes."""
-    markup_math: Treesitter = Treesitter(fg=R.green)
+    markup_math: Treesitter = Treesitter(fg=Hue.green)
     """Math environments (e.g., `$` in LaTeX)."""
-    markup_link: Treesitter = Treesitter(fg=R.blue, underdashed=True)
+    markup_link: Treesitter = Treesitter(fg=Hue.blue, underdashed=True)
     """Text references, footnotes, citations, etc."""
-    markup_link_label: Treesitter = Treesitter(fg=R.yellow)
+    markup_link_label: Treesitter = Treesitter(fg=Hue.yellow)
     """Link, reference descriptions."""
-    markup_link_url: Treesitter = Treesitter(fg=R.blue, underline=True)
+    markup_link_url: Treesitter = Treesitter(fg=Hue.blue, underline=True)
     """URL-style links."""
-    markup_raw: Treesitter = Treesitter(fg=R.yellow)
+    markup_raw: Treesitter = Treesitter(fg=Hue.yellow)
     """Literal or verbatim text (e.g., inline code)."""
-    markup_raw_block: Treesitter = Treesitter(fg=R.yellow)
+    markup_raw_block: Treesitter = Treesitter(fg=Hue.yellow)
     """Literal or verbatim text as a standalone block."""
-    markup_list: Treesitter = Treesitter(fg=R.violet)
+    markup_list: Treesitter = Treesitter(fg=Hue.violet)
     """List markers (e.g., `-`)."""
-    markup_list_checked: Treesitter = Treesitter(fg=R.green)
+    markup_list_checked: Treesitter = Treesitter(fg=Hue.green)
     """Checked todo-style list markers (e.g., `[x]`)."""
-    markup_list_unchecked: Treesitter = Treesitter(fg=R.yellow)
+    markup_list_unchecked: Treesitter = Treesitter(fg=Hue.yellow)
     """Unchecked todo-style list markers (e.g., `[ ]`)."""
 
-    punctuation_delimiter: Treesitter = Treesitter(fg=R.magenta)
+    punctuation_delimiter: Treesitter = Treesitter(fg=Hue.magenta)
     """Delimiters such as `;`, `.` and `,`."""
-    punctuation_bracket: Treesitter = Treesitter(fg=R.red)
+    punctuation_bracket: Treesitter = Treesitter(fg=Hue.red)
     """Brackets (e.g., `()`, `{}`, `[]`)."""
-    punctuation_special: Treesitter = Treesitter(fg=R.rose)
+    punctuation_special: Treesitter = Treesitter(fg=Hue.rose)
     """Special symbols (e.g., `{}` in string interpolation.)"""
 
     # strings
-    string: Treesitter = Treesitter(fg=R.cyan)
+    string: Treesitter = Treesitter(fg=Hue.cyan)
     """String literals."""
-    string_escape: Treesitter = Treesitter(fg=R.red)
+    string_escape: Treesitter = Treesitter(fg=Hue.red)
     """Escape characters in a string."""
-    string_documentation: Treesitter = Treesitter(fg=R.base10)
+    string_documentation: Treesitter = Treesitter(fg=Hue.base10)
     """Strings representing documentation such as Python docstrings."""
-    string_regexp: Treesitter = Treesitter(fg=R.orange)
+    string_regexp: Treesitter = Treesitter(fg=Hue.orange)
     """Regular expressions."""
-    string_special: Treesitter = Treesitter(fg=R.violet)
+    string_special: Treesitter = Treesitter(fg=Hue.violet)
     """Special strings such as dates."""
-    string_special_symbol: Treesitter = Treesitter(fg=R.violet)
+    string_special_symbol: Treesitter = Treesitter(fg=Hue.violet)
     """Symbols or atoms."""
-    string_special_path: Treesitter = Treesitter(fg=R.blue)
+    string_special_path: Treesitter = Treesitter(fg=Hue.blue)
     """Filename strings."""
-    string_special_url: Treesitter = Treesitter(fg=R.blue, underline=True)
+    string_special_url: Treesitter = Treesitter(fg=Hue.blue, underline=True)
     """String URIs (e.g., hyperlinks.)"""
 
     # tags
-    tag: Treesitter = Treesitter(fg=R.violet)
+    tag: Treesitter = Treesitter(fg=Hue.violet)
     """XML-style tag names."""
-    tag_builtin: Treesitter = Treesitter(fg=R.magenta)
+    tag_builtin: Treesitter = Treesitter(fg=Hue.magenta)
     """Builtin tag names (e.g., HTML tags)."""
-    tag_attribute: Treesitter = Treesitter(fg=R.yellow)
+    tag_attribute: Treesitter = Treesitter(fg=Hue.yellow)
     """XML-style tag attributes."""
-    tag_delimiter: Treesitter = Treesitter(fg=R.red)
+    tag_delimiter: Treesitter = Treesitter(fg=Hue.red)
     """XML-style tag delimiters."""
 
     # variables
-    variable: Treesitter = Treesitter(fg=R.azure)
+    variable: Treesitter = Treesitter(fg=Hue.azure)
     """Variable Names."""
-    variable_builtin: Treesitter = Treesitter(fg=R.rose, italic=True)
+    variable_builtin: Treesitter = Treesitter(fg=Hue.rose, italic=True)
     """Builtin ariable Names, e.g., `this` or `self`."""
-    variable_parameter: Treesitter = Treesitter(fg=R.orange)
+    variable_parameter: Treesitter = Treesitter(fg=Hue.orange)
     """Parameters of a function."""
-    variable_parameter_builtin: Treesitter = Treesitter(fg=R.magenta)
+    variable_parameter_builtin: Treesitter = Treesitter(fg=Hue.magenta)
     """Special parameters of a function, e.g., `_` and `it`."""
-    variable_member: Treesitter = Treesitter(fg=R.yellow)
+    variable_member: Treesitter = Treesitter(fg=Hue.yellow)
     """Object and struct fields."""
     # end: treesitter
 
     # begin: diagnostic
-    diagnostic_deprecated: Diagnostic = Diagnostic(fg=R.rose)
+    diagnostic_deprecated: Diagnostic = Diagnostic(fg=Hue.rose)
     """Deprecated or obsolete code in diagnostics."""
-    diagnostic_unnecessary: Diagnostic = Diagnostic(fg=R.base05)
+    diagnostic_unnecessary: Diagnostic = Diagnostic(fg=Hue.base05)
     """Unreachable code in diagnostics."""
 
-    diagnostic_error: Diagnostic = Diagnostic(fg=R.red)
+    diagnostic_error: Diagnostic = Diagnostic(fg=Hue.red)
     """Used as the base highlight group. Other groups link to this by default."""
-    diagnostic_warn: Diagnostic = Diagnostic(fg=R.orange)
+    diagnostic_warn: Diagnostic = Diagnostic(fg=Hue.orange)
     """Used as the base highlight group. Other groups link to this by default."""
-    diagnostic_info: Diagnostic = Diagnostic(fg=R.yellow)
+    diagnostic_info: Diagnostic = Diagnostic(fg=Hue.yellow)
     """Used as the base highlight group. Other groups link to this by default."""
-    diagnostic_hint: Diagnostic = Diagnostic(fg=R.green)
+    diagnostic_hint: Diagnostic = Diagnostic(fg=Hue.green)
     """Used as the base highlight group. Other groups link to this by default."""
-    diagnostic_ok: Diagnostic = Diagnostic(fg=R.mint)
+    diagnostic_ok: Diagnostic = Diagnostic(fg=Hue.mint)
     """Used as the base highlight group. Other groups link to this by default."""
 
-    dianostic_floating_error: Diagnostic = Diagnostic(link=Link.diagnostic_error)
-    dianostic_floating_warn: Diagnostic = Diagnostic(link=Link.diagnostic_warn)
-    dianostic_floating_info: Diagnostic = Diagnostic(link=Link.diagnostic_info)
-    dianostic_floating_hint: Diagnostic = Diagnostic(link=Link.diagnostic_hint)
-    dianostic_floating_ok: Diagnostic = Diagnostic(link=Link.diagnostic_ok)
+    dianostic_floating_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    dianostic_floating_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    dianostic_floating_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    dianostic_floating_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    dianostic_floating_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
 
-    dianostic_sign_error: Diagnostic = Diagnostic(link=Link.diagnostic_error)
-    dianostic_sign_warn: Diagnostic = Diagnostic(link=Link.diagnostic_warn)
-    dianostic_sign_info: Diagnostic = Diagnostic(link=Link.diagnostic_info)
-    dianostic_sign_hint: Diagnostic = Diagnostic(link=Link.diagnostic_hint)
-    dianostic_sign_ok: Diagnostic = Diagnostic(link=Link.diagnostic_ok)
+    dianostic_sign_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    dianostic_sign_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    dianostic_sign_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    dianostic_sign_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    dianostic_sign_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
 
     dianostic_underline_error: Diagnostic = Diagnostic(
-        link=Link.diagnostic_error, underline=True
+        link=T.diagnostic_error, underline=True
     )
     dianostic_underline_warn: Diagnostic = Diagnostic(
-        link=Link.diagnostic_warn, underline=True
+        link=T.diagnostic_warn, underline=True
     )
     dianostic_underline_info: Diagnostic = Diagnostic(
-        link=Link.diagnostic_info, underline=True
+        link=T.diagnostic_info, underline=True
     )
     dianostic_underline_hint: Diagnostic = Diagnostic(
-        link=Link.diagnostic_hint, underline=True
+        link=T.diagnostic_hint, underline=True
     )
     dianostic_underline_ok: Diagnostic = Diagnostic(
-        link=Link.diagnostic_ok, underline=True
+        link=T.diagnostic_ok, underline=True
     )
 
-    dianostic_virtual_text_error: Diagnostic = Diagnostic(link=Link.diagnostic_error)
-    dianostic_virtual_text_warn: Diagnostic = Diagnostic(link=Link.diagnostic_warn)
-    dianostic_virtual_text_info: Diagnostic = Diagnostic(link=Link.diagnostic_info)
-    dianostic_virtual_text_hint: Diagnostic = Diagnostic(link=Link.diagnostic_hint)
-    dianostic_virtual_text_ok: Diagnostic = Diagnostic(link=Link.diagnostic_ok)
+    dianostic_virtual_text_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    dianostic_virtual_text_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    dianostic_virtual_text_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    dianostic_virtual_text_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    dianostic_virtual_text_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
 
-    dianostic_virtual_lines_error: Diagnostic = Diagnostic(link=Link.diagnostic_error)
-    dianostic_virtual_lines_warn: Diagnostic = Diagnostic(link=Link.diagnostic_warn)
-    dianostic_virtual_lines_info: Diagnostic = Diagnostic(link=Link.diagnostic_info)
-    dianostic_virtual_lines_hint: Diagnostic = Diagnostic(link=Link.diagnostic_hint)
-    dianostic_virtual_lines_ok: Diagnostic = Diagnostic(link=Link.diagnostic_ok)
+    dianostic_virtual_lines_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    dianostic_virtual_lines_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    dianostic_virtual_lines_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    dianostic_virtual_lines_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    dianostic_virtual_lines_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
     # end: diagnostic
 
     # TODO: Maybe remove elements linked to TS and add new ones that provide more
     # nuance. This means that lsp logic is handled in mapping layer.
     # begin: lsp
     lsp_reference_text: Lsp = Lsp()
-    """Used for highlighting "text" references"""
+    """Used for highlighting "text" references."""
     lsp_reference_read: Lsp = Lsp()
-    """Used for highlighting "read" references"""
+    """Used for highlighting "read" references."""
     lsp_reference_write: Lsp = Lsp()
-    """Used for highlighting "write" references"""
+    """Used for highlighting "write" references."""
     lsp_reference_target: Lsp = Lsp()
     """Used for highlighting reference targets (e.g., in a however range)."""
     lsp_inlay_hint: Lsp = Lsp()
@@ -890,57 +904,89 @@ class ThemeBlocks(BaseNode):
     lsp_signature_active_parameter: Lsp = Lsp()
 
     # Semantic highlight provided by lsps. neovim `:h lsp-highlight`
-    lsp_type_class: Lsp = Lsp()
-    """Reference a class type."""
-    lsp_type_comment: Lsp = Lsp()
-    """Tokens that represent a comment."""
-    lsp_type_decorator: Lsp = Lsp(link=Link.attribute)
-    """Reference an annotation or decorator."""
-    lsp_type_enum: Lsp = Lsp()
-    """Reference to an enumeration type."""
-    lsp_type_enum_member: Lsp = Lsp()
-    """Reference to an enumeration property, constant, or member."""
-    lsp_type_event: Lsp = Lsp()
-    """Reference to an event property."""
-    lsp_type_function: Lsp = Lsp(link=Link.function)
-    lsp_type_interface: Lsp = Lsp()
-    lsp_type_keyword: Lsp = Lsp(link=Link.keyword)
-    """Tokens that represent a language keyword."""
-    lsp_type_macro: Lsp = Lsp()
-    lsp_type_method: Lsp = Lsp(link=Link.function_method)
-    lsp_type_modifier: Lsp = Lsp(link=Link.keyword_modifier)
-    lsp_type_namespace: Lsp = Lsp(link=Link.module)
-    lsp_type_number: Lsp = Lsp(link=Link.number)
-    lsp_type_operator: Lsp = Lsp(link=Link.operator)
-    lsp_type_parameter: Lsp = Lsp(link=Link.variable_parameter)
-    lsp_type_property: Lsp = Lsp(link=Link.property)
-    lsp_type_regexp: Lsp = Lsp(link=Link.string_regexp)
-    lsp_type_string: Lsp = Lsp(link=Link.string)
-    lsp_type_struct: Lsp = Lsp()
-    """Identifiers that declare or reference a struct."""
-    lsp_type_type: Lsp = Lsp(link=Link.keyword_type)
-    lsp_type_type_parameter: Lsp = Lsp()
-    lsp_type_variable: Lsp = Lsp(link=Link.variable)
-    lsp_mod_abstract: Lsp = Lsp(fg=R.orange)
-    """Types and methods that are abstract."""
-    lsp_mod_async: Lsp = Lsp(link=Link.keyword_coroutine)
-    """Functions that are marked async."""
-    lsp_mod_declaration: Lsp = Lsp(fg=R.magenta)
+    # lsp_type_class: Lsp = Lsp()
+    # """Reference a class type."""
+    # lsp_type_comment: Lsp = Lsp()
+    # """Tokens that represent a comment."""
+    # lsp_type_decorator: Lsp = Lsp(link=Link.attribute)
+    # """Reference an annotation or decorator."""
+    # lsp_type_enum: Lsp = Lsp()
+    # """Reference to an enumeration type."""
+    # lsp_type_enum_member: Lsp = Lsp()
+    # """Reference to an enumeration property, constant, or member."""
+    # lsp_type_event: Lsp = Lsp()
+    # """Reference to an event property."""
+    # lsp_type_function: Lsp = Lsp(link=Link.function)
+    # lsp_type_interface: Lsp = Lsp()
+    # lsp_type_keyword: Lsp = Lsp(link=Link.keyword)
+    # """Tokens that represent a language keyword."""
+    # lsp_type_macro: Lsp = Lsp()
+    # lsp_type_method: Lsp = Lsp(link=Link.function_method)
+    # lsp_type_modifier: Lsp = Lsp(link=Link.keyword_modifier)
+    # lsp_type_namespace: Lsp = Lsp(link=Link.module)
+    # lsp_type_number: Lsp = Lsp(link=Link.number)
+    # lsp_type_operator: Lsp = Lsp(link=Link.operator)
+    # lsp_type_parameter: Lsp = Lsp(link=Link.variable_parameter)
+    # lsp_type_property: Lsp = Lsp(link=Link.property)
+    # lsp_type_regexp: Lsp = Lsp(link=Link.string_regexp)
+    # lsp_type_string: Lsp = Lsp(link=Link.string)
+    # lsp_type_struct: Lsp = Lsp()
+    # """Identifiers that declare or reference a struct."""
+    # lsp_type_type: Lsp = Lsp(link=Link.keyword_type)
+    # lsp_type_type_parameter: Lsp = Lsp()
+    # lsp_type_variable: Lsp = Lsp(link=Link.variable)
+    # lsp_mod_abstract: Lsp = Lsp(fg=R.orange)
+    # """Types and methods that are abstract."""
+    # lsp_mod_async: Lsp = Lsp(link=Link.keyword_coroutine)
+    # """Functions that are marked async."""
+    # lsp_mod_declaration: Lsp = Lsp(fg=R.magenta)
+    # """Declaration of symbols."""
+    # lsp_mod_default_library: Lsp = Lsp(link=Link.module_builtin)
+    # """Symbols that are part of the standard library."""
+    # lsp_mod_definition: Lsp = Lsp(fg=R.blue)
+    # """Definitions of files, (e.g., in header files)."""
+    # lsp_mod_deprecated: Lsp = Lsp(link=Link.diagnostic_deprecated)
+    # """Symbols that should no longer be used."""
+    # lsp_mod_documentation: Lsp = Lsp(fg=R.yellow)
+    # """Occurrences of symbols in documentation."""
+    # lsp_mod_modification: Lsp = Lsp(fg=R.green)
+    # """Variable references where the variable is assigned to."""
+    # lsp_mod_readonly: Lsp = Lsp(fg=R.red)
+    # """Readonly variables and fields (constants)."""
+    # lsp_mod_static: Lsp = Lsp()
+    # """Static class members."""
+
+    # new "lsp" nodes?
+    # @lsp.type.typeParameter
+    # @lsp.type.enumMember
+    # @lsp.type.event (what even is this?)
+    # @lsp.type.interface
+    # @lsp.mod.abstract
+    # @lsp.mod.declaration (maybe)
+    # @lsp.mod.static
+    # @lsp.mod.modification
+    # @lsp.mod.deprecated
+
+    # Finer grained types from lsp semantic tokens.
+    # deprecated: Style = Style(link=Link.diagnostic_deprecated)
+    # """Tokens marked as deprecated."""
+    declaration: Syntax = Syntax()
     """Declaration of symbols."""
-    lsp_mod_default_library: Lsp = Lsp(link=Link.module_builtin)
-    """Symbols that are part of the standard library."""
-    lsp_mod_definition: Lsp = Lsp(fg=R.blue)
-    """Definitions of files, (e.g., in header files)."""
-    lsp_mod_deprecated: Lsp = Lsp(link=Link.diagnostic_deprecated)
-    """Symbols that should no longer be used."""
-    lsp_mod_documentation: Lsp = Lsp(fg=R.yellow)
-    """Occurrences of symbols in documentation."""
-    lsp_mod_modification: Lsp = Lsp(fg=R.green)
-    """Variable references where the variable is assigned to."""
-    lsp_mod_readonly: Lsp = Lsp(fg=R.red)
-    """Readonly variables and fields (constants)."""
-    lsp_mod_static: Lsp = Lsp(fg=R.)
-    """Static class members."""
+    event_property: Syntax = Syntax(link=T.property)
+    """Identifiers that declare or reference an event property."""
+    enum: Syntax = Syntax(fg=Hue.yellow)
+    """Identifiers that declare or reference an enumeration type."""
+    enum_member: Syntax = Syntax(fg=Hue.magenta)
+    """Identifiers that declare or reference an enumeration property."""
+    interface: Syntax = Syntax(fg=Hue.azure)
+    """Identifiers that declare or reference an interface."""
+    struct: Syntax = Syntax(fg=Hue.lime)
+    """Identifiers that declare or reference a struct type."""
+    type_parameter: Syntax = Syntax(fg=Hue.rose)
+    """Identifiers that declare or reference a type parameter."""
+    variable_modification: Syntax = Syntax(fg=Hue.green)
+    """Variable reference where the variable is assigned to."""
+    static_member: Syntax = Syntax(fg=Hue.orange)
 
     # begin: neovim groups.
     # Some might have had their names changed slightly, as many of these groups
@@ -948,20 +994,20 @@ class ThemeBlocks(BaseNode):
     # From neovim `h: highlight-groups`
     # syntax groups
 
-    conceal: UI = UI(fg=R.base08)
+    conceal: UI = UI(fg=Hue.base08)
     """Placeholder characters substituted for concealed text."""
 
-    color_column: UI = UI(bg=R.base02)
+    color_column: UI = UI(bg=Hue.base02)
     """Used for the columns such as max line length guide.."""
-    completion_match_insert: UI = UI(fg=R.green)
+    completion_match_insert: UI = UI(fg=Hue.green)
     """Matched text of the currently inserted completion."""
     # l_cursor: UI = UI()
     # """Character under cursor when |language-mapping| is used (see 'guicursor')."""
-    cursor_column: UI = UI(bg=R.base02)
+    cursor_column: UI = UI(bg=Hue.base02)
     """Screen column at the cursor."""
-    cursor_line: UI = UI(bg=R.base02)
+    cursor_line: UI = UI(bg=Hue.base02)
     """Screen line (row) at the cursor."""
-    cursor_line_number: UI = UI(fg=R.base10, bg=R.base02)
+    cursor_line_number: UI = UI(fg=Hue.base10, bg=Hue.base02)
     """The line number gutter item on the current cursor line."""
     cursor_line_fold: UI = UI()
     """Like `fold_column` when 'cursorline' is set for the cursor line."""
@@ -977,50 +1023,50 @@ class ThemeBlocks(BaseNode):
     # """Diff mode: Deleted line. |diff.txt|"""
     # diff_text: UI = UI()
     # """Diff mode: Changed text within a changed line. |diff.txt|"""
-    end_of_buffer: UI = UI(link=Link.non_text)
+    end_of_buffer: UI = UI(link=T.non_text)
     """Filler lines (~) after the end of the buffer."""
-    window_separator: UI = UI(bg=R.base15)
+    window_separator: UI = UI(bg=Hue.base15)
     """Separators between window splits."""
     folded_line: UI = UI()
     """Line used for closed folds."""
     fold_column: UI = UI()
     """'foldcolumn'"""
-    gutter: UI = UI(bg=R.base02)
+    gutter: UI = UI(bg=Hue.base02)
     """Column where signs (e.g., git, error checks)  are displayed."""
-    substitute: UI = UI(bg=R.hl_green, fg=R.black)
+    substitute: UI = UI(bg=Hue.hl_green, fg=Hue.black)
     """Substituted text in find / replace."""
-    line_number: UI = UI(bg=R.base02, fg=R.base10)
+    line_number: UI = UI(bg=Hue.base02, fg=Hue.base10)
     """Line numbers in sidebar. Applies to all numbers."""
-    line_number_above: UI = UI(bg=R.base02, fg=R.base09)
+    line_number_above: UI = UI(bg=Hue.base02, fg=Hue.base09)
     """Line number above the cursor line. In vim, only relevant with
     with relative numbering."""
-    line_number_below: UI = UI(bg=R.base02, fg=R.base09)
+    line_number_below: UI = UI(bg=Hue.base02, fg=Hue.base09)
     """Line number below the cursor line. In vim, only relevant with
     relative line numbering."""
-    matched_bracket: UI = UI(fg=R.yellow)
+    matched_bracket: UI = UI(fg=Hue.yellow)
     """Character under the cursor or just before it, if it is a paired bracket"""
 
-    message: UI = UI(bg=R.base03)
+    message: UI = UI(bg=Hue.base03)
     """Area for messages and command-line. Vim's MsgArea."""
-    message_error: Style = Style(link=Link.diagnostic_error)
+    message_error: Style = Style(link=T.diagnostic_error)
     """Error messages / notifications (e.g., on the command line)."""
-    message_warn: Style = Style(link=Link.diagnostic_warn)
+    message_warn: Style = Style(link=T.diagnostic_warn)
     """Warning messages / notifications (e.g., on the command line)."""
-    message_mode: Style = Style(fg=R.orange)
+    message_mode: Style = Style(fg=Hue.orange)
     """For modal editors, the mode display (e.g., vim `-- INSERT --`)."""
-    message_more: UI = UI(fg=R.yellow)
+    message_more: UI = UI(fg=Hue.yellow)
     """More prompt. Vim's MoreMsg."""
-    message_question: UI = UI(fg=R.green)
+    message_question: UI = UI(fg=Hue.green)
     """|hit-enter| prompt and yes/no questions."""
     message_separator: UI = UI()
     """Separator for scrolled messages |msgsep|."""
-    non_text: UI = UI(fg=R.base08)
+    non_text: UI = UI(fg=Hue.base08)
     """'@' at the end of the window, characters from 'showbreak' and other
     characters that do not really exist in the text
     (e.g., ">" displayed when a double-wide character doesn't fit."""
     # normal: UI = UI(fg=R.b11, bg=R.b0)
     # """Normal text. Primary foreground and background."""
-    floating_window: UI = UI(link=Link.main, bg=R.base02)
+    floating_window: UI = UI(link=T.main, bg=Hue.base02)
     """Normal text in floating windows."""
     floating_window_border: UI = UI()
     """Border of floating windows."""
@@ -1054,9 +1100,9 @@ class ThemeBlocks(BaseNode):
     """Tabstops in snippets. |vim.snippet|"""
     special_key: UI = UI()
     """Unprintable characters: Text displayed differently from what it really is."""
-    status_line: UI = UI(bg=R.base03, fg=R.base10)
+    status_line: UI = UI(bg=Hue.base03, fg=Hue.base10)
     """Status line of current window."""
-    status_line_unfocused: UI = UI(fg=R.base09, bg=R.base03)
+    status_line_unfocused: UI = UI(fg=Hue.base09, bg=Hue.base03)
     """Status lines of not-current windows."""
     tab_line: UI = UI()
     """Tab pages line, not active tab page label."""
@@ -1066,7 +1112,7 @@ class ThemeBlocks(BaseNode):
     """Tab pages line, active tab page label."""
     # visual_nos: UI = UI()
     # """Visual mode selection when vim is "Not Owning the Selection"."""
-    whitespace: UI = UI(fg=R.base08)
+    whitespace: UI = UI(fg=Hue.base08)
     """"Tokens like non-breaking space, trailing whitespace, etc."""
     wild_menu: UI = UI()
     """Current match in 'wildmenu' completion."""
@@ -1074,32 +1120,32 @@ class ThemeBlocks(BaseNode):
     """Window bar of current window."""
     window_bar_unfocused: UI = UI()
     """Window bar of not-current windows."""
-    menu: UI = UI(bg=R.base03, fg=R.base11)
+    menu: UI = UI(bg=Hue.base03, fg=Hue.base11)
     """Current menus and toolbars."""
-    scrollbar: UI = UI(bg=R.base04)
+    scrollbar: UI = UI(bg=Hue.base04)
     """Current main window's scrollbars."""
-    search: UI = UI(bg=R.hl_yellow, fg=R.black)
+    search: UI = UI(bg=Hue.hl_yellow, fg=Hue.black)
     """Last search pattern highlighting"""
-    search_current_match: UI = UI(bg=R.hl_blue)
+    search_current_match: UI = UI(bg=Hue.hl_blue)
     """Current match for the last search pattern."""
     # TODO: Do we want this?
-    search_incremental: UI = UI(bg=R.hl_blue, fg=R.black)
+    search_incremental: UI = UI(bg=Hue.hl_blue, fg=Hue.black)
     """Incremental search in find / replace.."""
-    spell_bad: Style = Style(fg=R.red, undercurl=True)
+    spell_bad: Style = Style(fg=Hue.red, undercurl=True)
     """Word that is not recognized by the spellchecker."""
-    spell_cap: Style = Style(fg=R.orange, undercurl=True)
+    spell_cap: Style = Style(fg=Hue.orange, undercurl=True)
     """Word that should start with a capital."""
-    spell_local: Style = Style(fg=R.yellow, underdotted=True)
+    spell_local: Style = Style(fg=Hue.yellow, underdotted=True)
     """Word that is recognized one that used in another region."""
-    spell_rare: Style = Style(fg=R.lime, underdotted=True)
+    spell_rare: Style = Style(fg=Hue.lime, underdotted=True)
     """Word that is recognized is hardly ever used."""
 
     # terminal for e.g., embedded terminal emulators in neovim
-    terminal_cursor: Terminal = Terminal(link=Link.cursor)
+    terminal_cursor: Terminal = Terminal(link=T.cursor)
     """Cursor in a focused terminal."""
-    terminal_status_line: Terminal = Terminal(link=Link.status_line)
+    terminal_status_line: Terminal = Terminal(link=T.status_line)
     """Status line of |terminal| window."""
-    terminal_status_line_unfocused: UI = UI(link=Link.status_line_unfocused)
+    terminal_status_line_unfocused: UI = UI(link=T.status_line_unfocused)
     """Status line of non-current terminal windows."""
 
     def __hash__(self) -> int:  # noqa: D105
@@ -1136,7 +1182,7 @@ class AbstractTheme(ThemeBlocks, ThemeMetadata):
         return super().__hash__()
 
     @staticmethod
-    def _get(palette: Palette, path: R | None) -> ColorField | None:
+    def _get(palette: Palette, path: Hue | None) -> ColorField | None:
         return palette[path] if path else None
 
     def _resolve_links(self, node: BaseStyle) -> BaseStyle:
@@ -1193,7 +1239,7 @@ class AbstractTheme(ThemeBlocks, ThemeMetadata):
         """
         node = self._resolve_links(node)
         resolved_fields = {
-            k: palette[v] if v in R else v
+            k: palette[v] if v in Hue else v
             for k, v in node
             if k in node.model_fields_set
         }
