@@ -86,7 +86,7 @@ class BaseNode(BaseSettings):
     def model_dump_lua(  # noqa: PLR0913
         self,
         *,
-        indent: str | None = "  ",
+        indent: str | None = "    ",
         indent_level: int = 0,
         exclude: set[str] | None = None,
         exclude_computed_fields: bool = False,

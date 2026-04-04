@@ -131,14 +131,6 @@ type ColorValue = Annotated[
 type ColorRef = NullStr | PaletteField | None
 
 
-class Refs(BaseNode):
-    """Container for palette field references."""
-
-    fg: ColorRef
-    bg: ColorRef
-    color: ColorRef
-
-
 class BaseStyle(BaseNode):
     """Base linkable object for style elements."""
 
@@ -160,13 +152,11 @@ class BaseStyle(BaseNode):
 
         Returns:
             An bool indicating if the `exclude` flag is set or it every value
-            is default.
+            is a default.
 
         """
         if self._is_empty is None:
-            self._is_empty = self.exclude or bool(
-                self.model_dump(exclude_defaults=True)
-            )
+            self._is_empty = self.exclude or bool(self.model_fields_set)
         return self._is_empty
 
 
@@ -374,6 +364,7 @@ class T(StrEnum):
     # lsp_type_type = auto()
     # lsp_type_type_parameter = auto()
     # lsp_type_variable = auto()
+    abstract = auto()
     ansi00 = auto()
     ansi01 = auto()
     ansi02 = auto()
@@ -395,6 +386,7 @@ class T(StrEnum):
     boolean = auto()
     character = auto()
     character_special = auto()
+    class_type = auto()
     color_column = auto()
     comment = auto()
     comment_documentation = auto()
@@ -417,36 +409,36 @@ class T(StrEnum):
     declaration = auto()
     diagnostic_deprecated = auto()
     diagnostic_error = auto()
+    diagnostic_floating_error = auto()
+    diagnostic_floating_hint = auto()
+    diagnostic_floating_info = auto()
+    diagnostic_floating_ok = auto()
+    diagnostic_floating_warn = auto()
     diagnostic_hint = auto()
     diagnostic_info = auto()
     diagnostic_ok = auto()
+    diagnostic_sign_error = auto()
+    diagnostic_sign_hint = auto()
+    diagnostic_sign_info = auto()
+    diagnostic_sign_ok = auto()
+    diagnostic_sign_warn = auto()
+    diagnostic_underline_error = auto()
+    diagnostic_underline_hint = auto()
+    diagnostic_underline_info = auto()
+    diagnostic_underline_ok = auto()
+    diagnostic_underline_warn = auto()
     diagnostic_unnecessary = auto()
+    diagnostic_virtual_lines_error = auto()
+    diagnostic_virtual_lines_hint = auto()
+    diagnostic_virtual_lines_info = auto()
+    diagnostic_virtual_lines_ok = auto()
+    diagnostic_virtual_lines_warn = auto()
+    diagnostic_virtual_text_error = auto()
+    diagnostic_virtual_text_hint = auto()
+    diagnostic_virtual_text_info = auto()
+    diagnostic_virtual_text_ok = auto()
+    diagnostic_virtual_text_warn = auto()
     diagnostic_warn = auto()
-    dianostic_floating_error = auto()
-    dianostic_floating_hint = auto()
-    dianostic_floating_info = auto()
-    dianostic_floating_ok = auto()
-    dianostic_floating_warn = auto()
-    dianostic_sign_error = auto()
-    dianostic_sign_hint = auto()
-    dianostic_sign_info = auto()
-    dianostic_sign_ok = auto()
-    dianostic_sign_warn = auto()
-    dianostic_underline_error = auto()
-    dianostic_underline_hint = auto()
-    dianostic_underline_info = auto()
-    dianostic_underline_ok = auto()
-    dianostic_underline_warn = auto()
-    dianostic_virtual_lines_error = auto()
-    dianostic_virtual_lines_hint = auto()
-    dianostic_virtual_lines_info = auto()
-    dianostic_virtual_lines_ok = auto()
-    dianostic_virtual_lines_warn = auto()
-    dianostic_virtual_text_error = auto()
-    dianostic_virtual_text_hint = auto()
-    dianostic_virtual_text_info = auto()
-    dianostic_virtual_text_ok = auto()
-    dianostic_virtual_text_warn = auto()
     diff_delta = auto()
     diff_minus = auto()
     diff_plus = auto()
@@ -461,6 +453,7 @@ class T(StrEnum):
     fold_column = auto()
     folded_line = auto()
     function = auto()
+    function_async = auto()
     function_builtin = auto()
     function_call = auto()
     function_macro = auto()
@@ -487,6 +480,7 @@ class T(StrEnum):
     line_number = auto()
     line_number_above = auto()
     line_number_below = auto()
+    lsp_code_lens = auto()
     lsp_code_lens_separator = auto()
     lsp_inlay_hint = auto()
     lsp_reference_read = auto()
@@ -560,7 +554,7 @@ class T(StrEnum):
     string_special_symbol = auto()
     string_special_url = auto()
     struct = auto()
-    substitute = auto()
+    search_replace = auto()
     tab_line = auto()
     tab_line_fill = auto()
     tab_line_sel = auto()
@@ -571,6 +565,7 @@ class T(StrEnum):
     terminal_cursor = auto()
     terminal_status_line = auto()
     terminal_status_line_unfocused = auto()
+    tooltip = auto()
     type = auto()
     type_builtin = auto()
     type_definition = auto()
@@ -586,6 +581,7 @@ class T(StrEnum):
     window_bar = auto()
     window_bar_unfocused = auto()
     window_separator = auto()
+
 
 class ThemeBlocks(BaseNode):
     """Theme style blocks and highlight groups.
@@ -658,16 +654,16 @@ class ThemeBlocks(BaseNode):
 
     constant: Treesitter = Treesitter(fg=Hue.magenta)
     """Constant identifiers."""
-    constant_builtin: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
+    constant_builtin: Treesitter = Treesitter(fg=Hue.magenta, bold=True)
     """Builtin constant identifiers."""
     constant_macro: Treesitter = Treesitter(fg=Hue.magenta, bold=True)
     """Constants defined by a preprocessor."""
 
     label: Treesitter = Treesitter(fg=Hue.orange)
     """GOTO and other labels, including heredoc labels."""
-    module: Treesitter = Treesitter(fg=Hue.lime, bold=True)
+    module: Treesitter = Treesitter(fg=Hue.mint)
     """Modules or namespace."""
-    module_builtin: Treesitter = Treesitter(fg=Hue.magenta, italic=True, bold=True)
+    module_builtin: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
     """Builtin or stdlib modules and namespaces."""
 
     # Basic types.
@@ -675,7 +671,7 @@ class ThemeBlocks(BaseNode):
     """Character literals."""
     character_special: Treesitter = Treesitter(fg=Hue.red)
     """Special characters, (e.g., wildcards)."""
-    boolean: Treesitter = Treesitter(fg=Hue.lime, italic=True)
+    boolean: Treesitter = Treesitter(fg=Hue.mint, italic=True)
     """Boolean literals."""
     number: Treesitter = Treesitter(fg=Hue.rose)
     """Numeric literals."""
@@ -683,11 +679,11 @@ class ThemeBlocks(BaseNode):
     """Floating point literals."""
     type: Treesitter = Treesitter(fg=Hue.violet)
     """Type or class definitions and annotations."""
-    type_builtin: Treesitter = Treesitter(fg=Hue.magenta)
+    type_builtin: Treesitter = Treesitter(fg=Hue.violet, italic=True)
     """Builtin types."""
     type_definition: Treesitter = Treesitter(fg=Hue.violet)
     """Identifiers in type definitions (e.g., typedef <type> <identifier>)."""
-    operator: Treesitter = Treesitter(fg=Hue.azure)
+    operator: Treesitter = Treesitter(fg=Hue.green)
     """Symbolic operators, (e.g., `+` and `*`)."""
     property: Treesitter = Treesitter(fg=Hue.yellow)
     """The key in key, value pairs."""
@@ -705,7 +701,7 @@ class ThemeBlocks(BaseNode):
     """Method definitions."""
     function_method_call: Treesitter = Treesitter(link=T.function_method)
     """Method calls."""
-    constructor: Treesitter = Treesitter(fg=Hue.azure)
+    constructor: Treesitter = Treesitter(fg=Hue.blue)
     """Constructor calls and definitions."""
 
     keyword: Treesitter = Treesitter(fg=Hue.violet)
@@ -716,13 +712,13 @@ class ThemeBlocks(BaseNode):
     """Keywords that define a function (e.g. `func` in Go, `def` in Python)."""
     keyword_operator: Treesitter = Treesitter(fg=Hue.azure)
     """Operators that are english words (e.g., `and`, `or`)."""
-    keyword_import: Treesitter = Treesitter(fg=Hue.rose)
+    keyword_import: Treesitter = Treesitter(fg=Hue.rose, italic=True)
     """Keywords for including or exporting modules (e.g., `import` in Python)."""
-    keyword_type: Treesitter = Treesitter(fg=Hue.rose, italic=True)
+    keyword_type: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
     """Keywords describing namespaces and composite types (e.g. `struct`, `enum`)."""
-    keyword_modifier: Treesitter = Treesitter(fg=Hue.mint)
+    keyword_modifier: Treesitter = Treesitter(fg=Hue.mint, italic=True)
     """Keywords modifying other constructs (e.g. `const`, `static`, `public`)."""
-    keyword_repeat: Treesitter = Treesitter(fg=Hue.lime)
+    keyword_repeat: Treesitter = Treesitter(fg=Hue.lime, italic=True)
     """Keywords related to loops (e.g., `for`, `while`)."""
     keyword_return: Treesitter = Treesitter(fg=Hue.red)
     """Keywords like `return` and `yield`."""
@@ -730,9 +726,9 @@ class ThemeBlocks(BaseNode):
     """Keywords related to debugging."""
     keyword_exception: Treesitter = Treesitter(fg=Hue.violet)
     """Keywords related to exception handling (e.g., `throw`, `catch`)."""
-    keyword_conditional: Treesitter = Treesitter(fg=Hue.mint)
+    keyword_conditional: Treesitter = Treesitter(fg=Hue.green)
     """Keywords related to conditional logic (e.g., `if`, `else`)."""
-    keyword_conditional_ternary: Treesitter = Treesitter(fg=Hue.mint)
+    keyword_conditional_ternary: Treesitter = Treesitter(fg=Hue.green)
     """Ternary operator (e.g., `?`, `;`)."""
     keyword_directive: Treesitter = Treesitter(fg=Hue.yellow)
     """Various preprocessor directives and shebangs."""
@@ -818,7 +814,7 @@ class ThemeBlocks(BaseNode):
     """XML-style tag delimiters."""
 
     # variables
-    variable: Treesitter = Treesitter(fg=Hue.azure)
+    variable: Treesitter = Treesitter(fg=Hue.base11)
     """Variable Names."""
     variable_builtin: Treesitter = Treesitter(fg=Hue.rose, italic=True)
     """Builtin ariable Names, e.g., `this` or `self`."""
@@ -833,7 +829,7 @@ class ThemeBlocks(BaseNode):
     # begin: diagnostic
     diagnostic_deprecated: Diagnostic = Diagnostic(fg=Hue.rose)
     """Deprecated or obsolete code in diagnostics."""
-    diagnostic_unnecessary: Diagnostic = Diagnostic(fg=Hue.base05)
+    diagnostic_unnecessary: Diagnostic = Diagnostic(fg=Hue.base08)
     """Unreachable code in diagnostics."""
 
     diagnostic_error: Diagnostic = Diagnostic(fg=Hue.red)
@@ -847,45 +843,41 @@ class ThemeBlocks(BaseNode):
     diagnostic_ok: Diagnostic = Diagnostic(fg=Hue.mint)
     """Used as the base highlight group. Other groups link to this by default."""
 
-    dianostic_floating_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
-    dianostic_floating_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
-    dianostic_floating_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
-    dianostic_floating_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
-    dianostic_floating_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
-
-    dianostic_sign_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
-    dianostic_sign_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
-    dianostic_sign_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
-    dianostic_sign_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
-    dianostic_sign_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
-
-    dianostic_underline_error: Diagnostic = Diagnostic(
+    diagnostic_floating_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    diagnostic_floating_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    diagnostic_floating_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    diagnostic_floating_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    diagnostic_floating_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
+    diagnostic_sign_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    diagnostic_sign_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    diagnostic_sign_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    diagnostic_sign_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    diagnostic_sign_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
+    diagnostic_underline_error: Diagnostic = Diagnostic(
         link=T.diagnostic_error, underline=True
     )
-    dianostic_underline_warn: Diagnostic = Diagnostic(
+    diagnostic_underline_warn: Diagnostic = Diagnostic(
         link=T.diagnostic_warn, underline=True
     )
-    dianostic_underline_info: Diagnostic = Diagnostic(
+    diagnostic_underline_info: Diagnostic = Diagnostic(
         link=T.diagnostic_info, underline=True
     )
-    dianostic_underline_hint: Diagnostic = Diagnostic(
+    diagnostic_underline_hint: Diagnostic = Diagnostic(
         link=T.diagnostic_hint, underline=True
     )
-    dianostic_underline_ok: Diagnostic = Diagnostic(
+    diagnostic_underline_ok: Diagnostic = Diagnostic(
         link=T.diagnostic_ok, underline=True
     )
-
-    dianostic_virtual_text_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
-    dianostic_virtual_text_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
-    dianostic_virtual_text_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
-    dianostic_virtual_text_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
-    dianostic_virtual_text_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
-
-    dianostic_virtual_lines_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
-    dianostic_virtual_lines_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
-    dianostic_virtual_lines_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
-    dianostic_virtual_lines_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
-    dianostic_virtual_lines_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
+    diagnostic_virtual_text_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    diagnostic_virtual_text_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    diagnostic_virtual_text_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    diagnostic_virtual_text_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    diagnostic_virtual_text_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
+    diagnostic_virtual_lines_error: Diagnostic = Diagnostic(link=T.diagnostic_error)
+    diagnostic_virtual_lines_warn: Diagnostic = Diagnostic(link=T.diagnostic_warn)
+    diagnostic_virtual_lines_info: Diagnostic = Diagnostic(link=T.diagnostic_info)
+    diagnostic_virtual_lines_hint: Diagnostic = Diagnostic(link=T.diagnostic_hint)
+    diagnostic_virtual_lines_ok: Diagnostic = Diagnostic(link=T.diagnostic_ok)
     # end: diagnostic
 
     # TODO: Maybe remove elements linked to TS and add new ones that provide more
@@ -900,6 +892,7 @@ class ThemeBlocks(BaseNode):
     lsp_reference_target: Lsp = Lsp()
     """Used for highlighting reference targets (e.g., in a however range)."""
     lsp_inlay_hint: Lsp = Lsp()
+    lsp_code_lens: Lsp = Lsp()
     lsp_code_lens_separator: Lsp = Lsp()
     lsp_signature_active_parameter: Lsp = Lsp()
 
@@ -967,17 +960,24 @@ class ThemeBlocks(BaseNode):
     # @lsp.mod.modification
     # @lsp.mod.deprecated
 
+    # Semantic tokens
     # Finer grained types from lsp semantic tokens.
     # deprecated: Style = Style(link=Link.diagnostic_deprecated)
     # """Tokens marked as deprecated."""
+    abstract: Syntax = Syntax()
+    """Types and methods that are abstract."""
     declaration: Syntax = Syntax()
     """Declaration of symbols."""
+    class_type: Syntax = Syntax()
+    """Identifiers that declare or reference a class."""
     event_property: Syntax = Syntax(link=T.property)
     """Identifiers that declare or reference an event property."""
     enum: Syntax = Syntax(fg=Hue.yellow)
     """Identifiers that declare or reference an enumeration type."""
     enum_member: Syntax = Syntax(fg=Hue.magenta)
     """Identifiers that declare or reference an enumeration property."""
+    function_async: Syntax = Syntax(link=T.function)
+    """Functions that are marked async."""
     interface: Syntax = Syntax(fg=Hue.azure)
     """Identifiers that declare or reference an interface."""
     struct: Syntax = Syntax(fg=Hue.lime)
@@ -1033,8 +1033,6 @@ class ThemeBlocks(BaseNode):
     """'foldcolumn'"""
     gutter: UI = UI(bg=Hue.base02)
     """Column where signs (e.g., git, error checks)  are displayed."""
-    substitute: UI = UI(bg=Hue.hl_green, fg=Hue.black)
-    """Substituted text in find / replace."""
     line_number: UI = UI(bg=Hue.base02, fg=Hue.base10)
     """Line numbers in sidebar. Applies to all numbers."""
     line_number_above: UI = UI(bg=Hue.base02, fg=Hue.base09)
@@ -1043,7 +1041,7 @@ class ThemeBlocks(BaseNode):
     line_number_below: UI = UI(bg=Hue.base02, fg=Hue.base09)
     """Line number below the cursor line. In vim, only relevant with
     relative line numbering."""
-    matched_bracket: UI = UI(fg=Hue.yellow)
+    matched_bracket: UI = UI(fg=Hue.black, bg=Hue.hl_yellow)
     """Character under the cursor or just before it, if it is a paired bracket"""
 
     message: UI = UI(bg=Hue.base03)
@@ -1112,6 +1110,8 @@ class ThemeBlocks(BaseNode):
     """Tab pages line, active tab page label."""
     # visual_nos: UI = UI()
     # """Visual mode selection when vim is "Not Owning the Selection"."""
+    tooltip: UI = UI()
+    """Current font, bg and fg of the tooltips when using a GUI."""
     whitespace: UI = UI(fg=Hue.base08)
     """"Tokens like non-breaking space, trailing whitespace, etc."""
     wild_menu: UI = UI()
@@ -1126,11 +1126,13 @@ class ThemeBlocks(BaseNode):
     """Current main window's scrollbars."""
     search: UI = UI(bg=Hue.hl_yellow, fg=Hue.black)
     """Last search pattern highlighting"""
-    search_current_match: UI = UI(bg=Hue.hl_blue)
+    search_current_match: UI = UI(bg=Hue.hl_blue, fg=Hue.black)
     """Current match for the last search pattern."""
     # TODO: Do we want this?
     search_incremental: UI = UI(bg=Hue.hl_blue, fg=Hue.black)
     """Incremental search in find / replace.."""
+    search_replace: UI = UI(bg=Hue.hl_green, fg=Hue.black)
+    """Substituted text in find / replace."""
     spell_bad: Style = Style(fg=Hue.red, undercurl=True)
     """Word that is not recognized by the spellchecker."""
     spell_cap: Style = Style(fg=Hue.orange, undercurl=True)
@@ -1304,6 +1306,20 @@ class Theme(ThemeBlocks, ThemeMetadata):
                 yield key, val
         for key, val in self.palette.colors():
             yield f"palette.{key}", val
+
+    def remap(self, mapping: dict[str, T]) -> Iterator[tuple[str, BaseStyle]]:
+        """Apply a map of app highlight name to theme field.
+
+        Yields:
+            A pair consisting of the app specific highlight name and the
+            theme field. Excludes falsey theme fields.
+
+        """
+        for name, theme_field in mapping.items():
+            style: BaseStyle = self[theme_field]
+            if not style:
+                continue
+            yield name, style
 
 
 class ThemeCollection(BaseNode):

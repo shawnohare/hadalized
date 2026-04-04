@@ -3,7 +3,15 @@ from typing import TYPE_CHECKING
 import pytest
 
 from hadalized.palette import Palette, PaletteMetadata
-from hadalized.theme import AbstractTheme, Color, Diagnostic, T, Hue, ThemeBlocks, Treesitter
+from hadalized.theme import (
+    AbstractTheme,
+    Color,
+    Diagnostic,
+    Hue,
+    T,
+    ThemeBlocks,
+    Treesitter,
+)
 
 if TYPE_CHECKING:
     from hadalized.theme import BaseStyle

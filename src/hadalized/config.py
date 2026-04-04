@@ -17,12 +17,14 @@ from pydantic_settings import (
 from hadalized.base import BaseNode, Home
 from hadalized.color import ColorRep, ColorSpace
 from hadalized.palette import Palette
-from hadalized.theme import AbstractTheme, Theme, ThemeCollection
+from hadalized.theme import AbstractTheme, T, Theme, ThemeCollection
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 type Context = Theme | ThemeCollection
+
+type ThemeAliases = dict[str, T]
 
 
 def _split_template(tmpl: Path) -> tuple[str, str]:
@@ -96,6 +98,8 @@ class BuildConfig(BaseNode):
     # """Palettes to include. Defaults to all defined palettes."""
     # themes: list[str] | None = None
     # """Themes to include. Defaults to all defined themes."""
+    # theme_mapping: dict[str, T] = Field(default={})
+    """A map from application specific highlight names to theme field."""
     _filename: str = PrivateAttr(default="")
     _subdir: Path = PrivateAttr(default=Path("./"))
     _template_name: str = PrivateAttr(default="")
@@ -135,9 +139,10 @@ class BuildConfig(BaseNode):
         builds = [
             BuildConfig(
                 name="neovim",
-                template=Path("neovim.lua"),
+                template=Path("neovim.lua.j2"),
                 color_rep=ColorRep.hex,
                 context_type=ContextType.theme,
+                # theme_mapping=utils.Neovim.mapping(),
             ),
             BuildConfig(
                 name="wezterm",

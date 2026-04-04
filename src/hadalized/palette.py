@@ -125,7 +125,7 @@ class Palette(PaletteMetadata):
     """Overlay 5."""
     base06: ColorField = "oklch(0.350 .035 220)"
     """Overlay 6."""
-    base07: ColorField = "oklch(0.4250 .020 220)"
+    base07: ColorField = "oklch(0.4750 .020 220)"
     """Base Midpoint."""
     base08: ColorField = "oklch(0.500 .010 220)"
     """Strongly de-mphasized foreground text."""

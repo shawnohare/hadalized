@@ -266,3 +266,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 .DS_STORE
+
+# Project specific
+notes.md

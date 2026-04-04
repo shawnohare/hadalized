@@ -17,6 +17,7 @@ from jinja2 import (
 )
 from loguru import logger
 
+from hadalized import utils
 from hadalized.base import APP_NAME
 from hadalized.cache import Cache
 from hadalized.config import ContextType
@@ -158,7 +159,7 @@ class ThemeWriter:
         if self._must_build(path, digest):
             if not opt.quiet:
                 logger.info(f"Building {path} {digest}.")
-            text = template.render(context=context, build=bconf)
+            text = template.render(context=context, build=bconf, utils=utils)
             if not opt.dry_run:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(text, encoding="utf-8")
