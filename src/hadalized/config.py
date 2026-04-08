@@ -59,14 +59,6 @@ class ContextType(StrEnum):
     """A collection of themes will be passed to the `context` variable."""
 
 
-class BuiltinThemes(StrEnum):
-    """Enumerates the list of themes that are handled by the builder."""
-
-    neovim = auto()
-    wezterm = auto()
-    starship = auto()
-
-
 class BuildConfig(BaseNode):
     """Information about which files should be generatted specific app."""
 

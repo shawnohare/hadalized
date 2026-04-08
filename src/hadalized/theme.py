@@ -661,21 +661,21 @@ class ThemeBlocks(BaseNode):
 
     label: Treesitter = Treesitter(fg=Hue.orange)
     """GOTO and other labels, including heredoc labels."""
-    module: Treesitter = Treesitter(fg=Hue.mint)
+    module: Treesitter = Treesitter(fg=Hue.yellow)
     """Modules or namespace."""
-    module_builtin: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
+    module_builtin: Treesitter = Treesitter(fg=Hue.orange, italic=True)
     """Builtin or stdlib modules and namespaces."""
 
     # Basic types.
-    character: Treesitter = Treesitter(fg=Hue.cyan)
+    character: Treesitter = Treesitter(fg=Hue.azure)
     """Character literals."""
     character_special: Treesitter = Treesitter(fg=Hue.red)
     """Special characters, (e.g., wildcards)."""
-    boolean: Treesitter = Treesitter(fg=Hue.mint, italic=True)
+    boolean: Treesitter = Treesitter(fg=Hue.magenta)
     """Boolean literals."""
-    number: Treesitter = Treesitter(fg=Hue.rose)
+    number: Treesitter = Treesitter(fg=Hue.magenta)
     """Numeric literals."""
-    number_float: Treesitter = Treesitter(fg=Hue.magenta)
+    number_float: Treesitter = Treesitter(fg=Hue.rose)
     """Floating point literals."""
     type: Treesitter = Treesitter(fg=Hue.violet)
     """Type or class definitions and annotations."""
@@ -691,7 +691,7 @@ class ThemeBlocks(BaseNode):
     # functions
     function: Treesitter = Treesitter(fg=Hue.blue)
     """Function definitions."""
-    function_builtin: Treesitter = Treesitter(fg=Hue.magenta)
+    function_builtin: Treesitter = Treesitter(fg=Hue.blue, italic=True)
     """Functions provided by the stdlib."""
     function_call: Treesitter = Treesitter(link=T.function)
     """Function calls (e.g., `myfunc(x)`)."""
@@ -720,15 +720,15 @@ class ThemeBlocks(BaseNode):
     """Keywords modifying other constructs (e.g. `const`, `static`, `public`)."""
     keyword_repeat: Treesitter = Treesitter(fg=Hue.lime, italic=True)
     """Keywords related to loops (e.g., `for`, `while`)."""
-    keyword_return: Treesitter = Treesitter(fg=Hue.red)
+    keyword_return: Treesitter = Treesitter(fg=Hue.red, italic=True)
     """Keywords like `return` and `yield`."""
     keyword_debug: Treesitter = Treesitter(fg=Hue.red)
     """Keywords related to debugging."""
-    keyword_exception: Treesitter = Treesitter(fg=Hue.violet)
+    keyword_exception: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
     """Keywords related to exception handling (e.g., `throw`, `catch`)."""
-    keyword_conditional: Treesitter = Treesitter(fg=Hue.green)
+    keyword_conditional: Treesitter = Treesitter(fg=Hue.orange, italic=True)
     """Keywords related to conditional logic (e.g., `if`, `else`)."""
-    keyword_conditional_ternary: Treesitter = Treesitter(fg=Hue.green)
+    keyword_conditional_ternary: Treesitter = Treesitter(fg=Hue.red, italic=True)
     """Ternary operator (e.g., `?`, `;`)."""
     keyword_directive: Treesitter = Treesitter(fg=Hue.yellow)
     """Various preprocessor directives and shebangs."""
@@ -1050,7 +1050,7 @@ class ThemeBlocks(BaseNode):
     """Error messages / notifications (e.g., on the command line)."""
     message_warn: Style = Style(link=T.diagnostic_warn)
     """Warning messages / notifications (e.g., on the command line)."""
-    message_mode: Style = Style(fg=Hue.orange)
+    message_mode: Style = Style(fg=Hue.blue)
     """For modal editors, the mode display (e.g., vim `-- INSERT --`)."""
     message_more: UI = UI(fg=Hue.yellow)
     """More prompt. Vim's MoreMsg."""
