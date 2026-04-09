@@ -712,7 +712,7 @@ class ThemeBlocks(BaseNode):
     """Keywords that define a function (e.g. `func` in Go, `def` in Python)."""
     keyword_operator: Treesitter = Treesitter(fg=Hue.azure)
     """Operators that are english words (e.g., `and`, `or`)."""
-    keyword_import: Treesitter = Treesitter(fg=Hue.rose, italic=True)
+    keyword_import: Treesitter = Treesitter(fg=Hue.orange, italic=True)
     """Keywords for including or exporting modules (e.g., `import` in Python)."""
     keyword_type: Treesitter = Treesitter(fg=Hue.magenta, italic=True)
     """Keywords describing namespaces and composite types (e.g. `struct`, `enum`)."""
@@ -743,19 +743,19 @@ class ThemeBlocks(BaseNode):
     """Struckthrough text in markup."""
     markup_underline: Treesitter = Treesitter(underline=True)
     """Underlined text in markup."""
-    markup_heading: Treesitter = Treesitter(underdouble=True)
+    markup_heading: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Headings and titles, including markers (e.g, `#` in markdown)."""
-    markup_heading_1: Treesitter = Treesitter(fg=Hue.red, bold=True)
+    markup_heading_1: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Top-level heading."""
-    markup_heading_2: Treesitter = Treesitter(fg=Hue.orange, bold=True)
+    markup_heading_2: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Second-level heading."""
-    markup_heading_3: Treesitter = Treesitter(fg=Hue.yellow, bold=True)
+    markup_heading_3: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Third-level heading."""
-    markup_heading_4: Treesitter = Treesitter(fg=Hue.lime, bold=True)
+    markup_heading_4: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Fourth-level heading."""
-    markup_heading_5: Treesitter = Treesitter(fg=Hue.green, bold=True)
+    markup_heading_5: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Fifth-level heading."""
-    markup_heading_6: Treesitter = Treesitter(fg=Hue.mint, bold=True)
+    markup_heading_6: Treesitter = Treesitter(bg=Hue.base15, fg=Hue.base00)
     """Sixth-level heading."""
     markup_quote: Treesitter = Treesitter(fg=Hue.azure, italic=True)
     """Block quotes."""
