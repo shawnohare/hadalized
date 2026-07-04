@@ -82,7 +82,7 @@ class ColorParser:
 
     @staticmethod
     def _to_hex(val: BaseColor) -> str:
-        """Convert RGB to their corresponding 24-bit or 34-bit hex color code.
+        """Convert RGB to their corresponding 24-bit or 32-bit hex color code.
 
         Used primarily to extract a hex code for use
         in programs--such as neovim--that only allow specifying colors

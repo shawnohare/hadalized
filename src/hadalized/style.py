@@ -79,7 +79,7 @@ class Style(BaseNode):
     """Specifies that the instance's values should be merged into the
     linked theme field."""
     exclude: bool = False
-    """Set when a user wants to purposefully exlude a style from usage."""
+    """Set when a user wants to purposefully exclude a style from usage."""
     _is_empty: bool | None = PrivateAttr(default=None)
     _field: str = PrivateAttr(default="")
 
@@ -93,11 +93,11 @@ class Style(BaseNode):
         self._field = val
 
     def __bool__(self) -> bool:
-        """Is the instance excluded or an empty default.
+        """Whether the style is excluded or explicitly configured.
 
         Returns:
-            An bool indicating if the `exclude` flag is set or it every value
-            is a default.
+            A bool indicating if the `exclude` flag is set or any field was
+            explicitly set.
 
         """
         if self._is_empty is None:
@@ -112,7 +112,7 @@ class Syntax(Style):
 class UI(Style):
     """UI elements with additional fields.
 
-    Invludes widgets, windows, menus, etc.
+    Includes widgets, windows, menus, etc.
     """
 
 

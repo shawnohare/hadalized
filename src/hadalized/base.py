@@ -240,7 +240,7 @@ class Home:
         """Application cache home.
 
         Returns:
-            The application configuration home directory.
+            The application cache home directory.
 
         """
         return xdg_base_dirs.xdg_cache_home() / APP_DIR
@@ -250,7 +250,7 @@ class Home:
         """Application state home.
 
         Returns:
-            The application configuration home directory.
+            The application state home directory.
 
         """
         return xdg_base_dirs.xdg_state_home() / APP_DIR
@@ -260,7 +260,7 @@ class Home:
         """Application data home.
 
         Returns:
-            The application configuration home directory.
+            The application data home directory.
 
         """
         return xdg_base_dirs.xdg_data_home() / APP_DIR
@@ -270,7 +270,7 @@ class Home:
         """Application user config templates home.
 
         Returns:
-            The application configuration home directory.
+            The application user template directory.
 
         """
         return cls.config() / "templates"
@@ -280,7 +280,7 @@ class Home:
         """Application home for built themes.
 
         Returns:
-            The application configuration home directory.
+            The application state build directory.
 
         """
         return cls.state() / "build"

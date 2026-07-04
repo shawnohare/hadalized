@@ -5,10 +5,10 @@ Python package with CLI to build hadalized-style application themes.
 ## Introduction
 
 The application can build any theme conforming to the hadalized `Palette`
-schema for any application with a `BuildConfig` and appropriate theme
+schema for any application with an `AppConfig` and appropriate theme
 template.
 
-The builtin [hadalized color palettes](./src/hadalized/colors.py)
+The builtin [hadalized color palettes](./src/hadalized/config.py)
 are defined as oklch color values. Application theme templates are rendered
 with the appropriate color type (e.g., hex values for neovim). Under the hood
 the `coloraide` python package is used to transform between colorspaces and fit
@@ -16,7 +16,7 @@ to gamuts.
 
 Creating a theme builder arises from the desire to use the OKLCH color space
 as the basis for any application color theme. When developing the palette, it
-quickly becomes tedius to manually convert oklch values to their hex
+quickly becomes tedious to manually convert oklch values to their hex
 equivalents.
 
 The builder primarily targets the neovim colorscheme files in

@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from hadalized.config import (
+    Config,
     Options,
     UserConfig,
     load_config,
@@ -52,9 +53,19 @@ def test_opts_init():
 
 def test_opts_mutually_exclusive_fields():
     with pytest.raises(ValueError):
-        Options(config_file=Path("blah"), no_config=True)
+        _ = Options(config_file=Path("blah"), no_config=True)
     with pytest.raises(ValueError):
-        Options(verbose=True, quiet=True)
+        _ = Options(verbose=True, quiet=True)
+
+
+def test_output_name_requires_single_app_and_palette(config: Config, tmp_path: Path):
+    with pytest.raises(ValueError):
+        _ = Config(
+            cache_dir=config.cache_dir,
+            state_dir=config.state_dir,
+            template_dir=config.template_dir,
+            output_name=tmp_path / "theme.lua",
+        )
 
 
 def test_opts_properties():

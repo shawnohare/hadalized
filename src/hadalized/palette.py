@@ -113,7 +113,7 @@ class Palette(BaseNode):
     - 16 bases used in foregrounds, backgrounds, overlays, etc. prefixed with `base`.
     - 12 common grayscale colors
     - 12 standard hues
-    - 12 lternate / bright hues prefixed with `alt_`
+    - 12 alternate / bright hues prefixed with `alt_`
     - 12 highlight hues prefixed with `hl_`
     """
 
@@ -138,7 +138,7 @@ class Palette(BaseNode):
     base07: str = "oklch(0.4750 .020 220)"
     """Base Midpoint."""
     base08: str = "oklch(0.500 .010 220)"
-    """Strongly de-mphasized foreground text."""
+    """Strongly de-emphasized foreground text."""
     base09: str = "oklch(0.600 .010 220)"
     base10: str = "oklch(0.700 .010 220)"
     """De-emphasized foreground text."""
@@ -241,7 +241,7 @@ class Palette(BaseNode):
 
     @property
     def mode(self) -> str:
-        """Palette version."""
+        """Palette mode."""
         return self.meta.mode
 
     # def hue(self, name: Hue) -> str:

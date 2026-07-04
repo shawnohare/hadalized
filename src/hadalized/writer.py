@@ -52,7 +52,7 @@ class FileBuildInfo(BaseModel):
 
 
 class RunInfo(BaseModel):
-    """Information about a run of a ThemeWritter instance."""
+    """Information about a run of a ThemeWriter instance."""
 
     opt: Options
     files: list[FileBuildInfo]
@@ -86,8 +86,7 @@ class ThemeWriter:
     def __init__(self, config: Config):
         """Prepare an instance for writing files.
 
-        Initializtion does not connect to the cache database or write
-        any files.
+        Initialization does not write any files.
 
         Args:
             config: A configuration instance if customization is required.
@@ -144,10 +143,10 @@ class ThemeWriter:
         """Build a single color theme file.
 
         When an output dir is specified, the generated file is copied to
-        the output dir from the application state directory.
+        the output dir from the build cache directory.
 
         Returns:
-            A path of the built file and whether it was generated.
+            Information about the built file.
 
         """
         app = context.app
@@ -167,7 +166,7 @@ class ThemeWriter:
                 config=self.config,
                 utils=utils,
             )
-            if not opt.dry_run:
+            if not opt.dry_run or opt.no_cache:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 _ = path.write_text(text, encoding="utf-8")
             was_built = True
@@ -191,7 +190,7 @@ class ThemeWriter:
         """Generate color theme files for a specific application.
 
         Args:
-            app_config: A configuration specifying how theme files shoud be built.
+            app_config: A configuration specifying how theme files should be built.
 
         Returns:
             A list of theme file paths and an indicator which was built.
@@ -232,18 +231,21 @@ class ThemeWriter:
 
         """
         config = self.config
-        builds = (self.build(x) for x in config.apps.values() if config.is_included(x))
-        files = [p for paths in builds for p in paths]
+        apps = (
+            app for app in self.config.apps.values() if self.config.is_included(app)
+        )
+
+        files = [p for app_config in apps for p in self.build(app_config)]
         return RunInfo(
             opt=config.opt,
             files=files,
         )
 
     def __enter__(self):
-        """Connect to the cache.
+        """Enter the writer context.
 
         Returns:
-            The instance with a connection to the cache db.
+            The writer instance.
 
         """
         # NOTE: Could be useful to keep around for storing application state.
@@ -252,7 +254,7 @@ class ThemeWriter:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Close cache db connection."""
+        """Log context manager exceptions."""
         if exc_type is not None:
             logger.error((exc_type, exc_value, traceback))
         # NOTE: Could be useful to keep around for storing application state.

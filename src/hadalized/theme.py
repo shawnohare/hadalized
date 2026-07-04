@@ -287,7 +287,7 @@ class Theme(BaseNode):
     variable: Style = Style(fg=Hue.base11)
     """Variable Names."""
     variable_builtin: Style = Style(fg=Hue.rose, italic=True)
-    """Builtin ariable Names, e.g., `this` or `self`."""
+    """Builtin variable names, e.g., `this` or `self`."""
     variable_parameter: Style = Style(fg=Hue.orange)
     """Parameters of a function."""
     variable_parameter_builtin: Style = Style(fg=Hue.magenta)
@@ -302,7 +302,7 @@ class Theme(BaseNode):
     diagnostic_unnecessary: Style = Style(sp=Hue.base15, undercurl=True)
     """Unreachable code in diagnostics."""
     diagnostic_error: Style = Style(fg=Hue.red)
-    """Diagnotic errors."""
+    """Diagnostic errors."""
     diagnostic_warn: Style = Style(fg=Hue.orange)
     """Diagnostic warnings and similar."""
     diagnostic_info: Style = Style(fg=Hue.yellow)
@@ -707,7 +707,7 @@ class Theme(BaseNode):
             palette: A palette containing color definitions.
 
         Returns:
-            A universal, concrete Theme resolved against the input pallete.
+            A universal, concrete Theme resolved against the input palette.
 
         """
         return resolve(self, palette)
@@ -722,7 +722,7 @@ def resolve(theme: Theme, palette: Palette) -> Theme:
         palette: A palette containing color definitions.
 
     Returns:
-        A universal, concrete Theme resolved against the input pallete.
+        A universal, concrete Theme resolved against the input palette.
 
     """
 

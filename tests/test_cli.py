@@ -110,6 +110,12 @@ def test_config_init_output_dir_given(tmp_path: Path):
     m.config_init(Options(output_dir=tmp_path, no_config=True, dry_run=True))
 
 
+def test_config_init_dry_run_does_not_create_file(tmp_path: Path):
+    output = tmp_path / "config.toml"
+    m.config_init(Options(output_dir=output, no_config=True, dry_run=True, quiet=True))
+    assert not output.exists()
+
+
 def test_config_options():
     m.config_options()
 

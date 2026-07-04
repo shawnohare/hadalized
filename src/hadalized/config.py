@@ -1,6 +1,5 @@
 """Module containing all underlying color definitions and gamut info."""
 
-from enum import StrEnum, auto
 from pathlib import Path
 from typing import Annotated, Any, ClassVar, Self
 
@@ -56,16 +55,14 @@ def validate_nullable_path(val: str | Path | None) -> Path | None:
 
 
 class AppConfig(BaseNode):
-    """Information about which files should be generatted specific app."""
+    """Information about theme files generated for a specific app."""
 
     name: str = Field(
         examples=["neovim", "myapp", "html-examples"],
     )
-    """Application name or category. Controls where built theme files
-    are cached."""
+    """Application name or category. Controls copied output subdirectories."""
     template: Path
-    """Template filename relative to the templates directory. When the path
-    suffix indicates a jinja filetype, """
+    """Template filename relative to the templates directory or package templates."""
     gamut: ColorSpace = Field(default=ColorSpace.srgb, examples=["display-p3"])
     """The gamut to fit colors to. For example, if the theme targets css
     a wide gamut might be appropriate. For many terminal applications it
@@ -73,7 +70,7 @@ class AppConfig(BaseNode):
     color_rep: ColorRep = ColorRep.hex
     """How each ColorInfo should be transformed when presented as context
     to the template. Typically indicates which leaf of a ColorInfo to use, e.g.,
-    `"hex"` for chases where the application expects hex color codes."""
+    `"hex"` for cases where the application expects hex color codes."""
     _template_name: str = PrivateAttr(default="")
     """Template name ignoring jinja specific parts."""
     _template_suffix: str = PrivateAttr(default="")
@@ -112,16 +109,16 @@ class Options(BaseNode):
         Parameter(alias=["--rep"]),
     ] = Field(default=None)
     """How each color should be encoded when presented as context
-    to the template. Overrides the setings in individual application configurations.
+    to the template. Overrides the settings in individual application configurations.
     """
     dry_run: Annotated[bool, Parameter(alias="-D", negative="")] = False
-    """Do not output any files or write to cache."""
+    """Preview actions without writing files or deleting directories."""
     force: Annotated[bool, Parameter(alias="-f", negative="")] = False
     """Force generation of application theme files. If set during theme
-    building, cache is ignored.
+    building, cached build artifacts are rebuilt.
     """
     no_cache: Annotated[bool, Parameter(negative="")] = False
-    """Ignore cache completely."""
+    """Rebuild generated theme files instead of reusing cached build artifacts."""
     no_config: Annotated[bool, Parameter(negative="")] = False
     """Do not read settings from user config files. Implies `--no-templates`."""
     no_templates: Annotated[bool, Parameter(negative="")] = False
@@ -134,9 +131,9 @@ class Options(BaseNode):
         default=None,
         examples=[Path("./build"), Path("./colors")],
     )
-    """Directory to write built theme files. By default, each application's
-    theme files are included in a subdirectory of this directory, unless the
-    ``no-prefix`` flag is set."""
+    """Directory where generated theme files are copied. By default, each
+    application's theme files are included in an application-named subdirectory
+    of this directory, unless the ``no-prefix`` flag is set."""
     output_name: Annotated[
         Path | None,
         Parameter(alias=["--outname", "-n"]),
@@ -145,8 +142,8 @@ class Options(BaseNode):
         default=None,
         examples=[Path("./starship.toml"), Path("./colors/mytheme.lua")],
     )
-    """Name of the output theme file. Can be set when building a
-    single theme file by specifying one application and one palette.
+    """Output path for a single generated theme file. Requires exactly one
+    selected application and one selected palette.
     """
     include_apps: Annotated[
         set[str],
@@ -170,8 +167,8 @@ class Options(BaseNode):
     """
     prefix: Annotated[bool, Parameter()] = True
     """When set in conjunction with an output directory, built themes will
-    be placed in a subdirectory determined by built theme file's parent
-    directory. Typically this is just the applicate name, e.g., 'neovim'."""
+    be placed in a subdirectory determined by the application name, e.g.,
+    'neovim'."""
     quiet: Annotated[bool, Parameter(alias="-q", negative="")] = False
     """Suppress logging to stdout."""
     state_dir: Annotated[Path, Parameter(parse=True)] = Home.state()
@@ -200,16 +197,20 @@ class Options(BaseNode):
             raise ValueError("Cannot set both no_config and config_file.")
         if self.output_dir and self.output_name:
             raise ValueError("Cannot set both output_dir and output_name.")
+        if self.output_name and (
+            len(self.include_palettes) != 1 or len(self.include_apps) != 1
+        ):
+            raise ValueError("output_name requires one app and palette.")
         return self
 
     @property
     def build_dir(self) -> Path:
-        """Location of cached theme files."""
+        """Location of cached build artifacts."""
         return self.cache_dir / "build"
 
     @property
     def use_cache(self) -> bool:
-        """Opposite of `no_cache`."""
+        """Whether cached build artifacts may be reused."""
         return not self.no_cache
 
     @property
@@ -225,7 +226,7 @@ class Options(BaseNode):
         """Determine whether the instance name is in an include list.
 
         Returns:
-            True if the instance name is in the appropirate return list.
+            True if the instance name is in the appropriate include list.
 
         """
         match inst:
@@ -477,9 +478,9 @@ class UserConfig(Config):
 
     - init params, e.g., those passed from the CLI
     - environment variables prefixed with `HADALIZED_`
-    - DISABLED in 0.5 ~environment variables in `./.env` prefixed with `HADALIZED_`
+    - environment variables in `./hadalized.env` prefixed with `HADALIZED_`
     - settings in `./hadalized.toml`
-    - settings in `$XDG_CONFIG_DIR/hadalized/config.toml`
+    - settings in `$XDG_CONFIG_HOME/hadalized/config.toml`
     """
 
     model_config = SettingsConfigDict(

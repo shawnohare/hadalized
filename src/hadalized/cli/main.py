@@ -20,7 +20,7 @@ config_app = app.command(
 palette_app = app.command(App(name="palette", help="Interact with palettes."))
 theme_app = app.command(App(name="theme", help="Interact with universal themes."))
 state_app = app.command(
-    App(name="state", help="Interact with the application state, e.g., built files.")
+    App(name="state", help="Interact with application state files.")
 )
 
 
@@ -29,8 +29,8 @@ def build(opt: Options | None = None):
     """Build application color themes files.
 
     When no applications or palette is specified, themes will be built for all
-    application, abstract theme, and palette pairs, and copied to subdirs in
-    `./build`.
+    application and palette pairs. Built files are cached in the build cache and
+    copied only when an output directory or output name is specified.
 
     Usage examples:
     - hdl build --output-dir="build"
@@ -66,13 +66,14 @@ def config_schema():
 def config_init(opts: Options | None = None):
     """Populate application configuration toml file.
 
-    When `--output=stdout` the toml contents will be printed.
+    When `--output-dir=stdout` the toml contents will be printed.
     """
     import tomli_w as toml
 
     config = load_config(opts)
+    data = config.model_dump(mode="json", exclude_none=True)
     if str(config.output_dir) == "stdout":
-        print(toml.dumps(config.model_dump(mode="json", exclude_none=True)))
+        print(toml.dumps(data))
         return
     output = config.output_dir or Home.config()
     if output.suffix != ".toml":
@@ -84,12 +85,12 @@ def config_init(opts: Options | None = None):
     if output_exists and not config.force:
         return
 
-    output.parent.mkdir(parents=True, exist_ok=True)
-    with output.open("wb") as fp:
-        if not config.quiet:
-            print(f"Creating {output}")
-        data = config.model_dump(mode="json", exclude_none=True)
-        if not config.dry_run:
+    if not config.quiet:
+        action = "Would create" if config.dry_run else "Creating"
+        print(f"{action} {output}")
+    if not config.dry_run:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with output.open("wb") as fp:
             toml.dump(data, fp)
     # except TypeError as exc:
     #     print(f"Unable to write config file: {exc}")
@@ -112,13 +113,12 @@ def palette_info(
     """Show color information for palettes.
 
     Usage examples:
-    - hdl palette info --palette="hadalized-dark"
-    - hdl palette info --gamut="display-p3" --palette="hadalized-dark"
+    - hdl palette info hadalized-dark
+    - hdl palette info hadalized-dark --gamut="display-p3"
 
     Args:
         name: A named palette.
-        gamut: A specifed gamut to parse against. If not provided, the
-            gamut defined by the palette is used.
+        gamut: A specified gamut to parse against. Defaults to srgb.
         opt: Options
 
     """
@@ -166,14 +166,14 @@ def cache_list(opt: Options | None = None):
 
 @state_app.command(name="dir")
 def state_dir(opt: Options | None = None):
-    """Show the applicate state directory."""
+    """Show the application state directory."""
     config = load_config(opt)
     print(config.opt.state_dir)
 
 
 @state_app.command(name="clean")
 def state_clean(opt: Options | None = None):
-    """Clear application state files such as built themes."""
+    """Clear application state files."""
     config = load_config(opt)
     if config.dry_run and not config.quiet:
         print("DRY-RUN. No state files will be deleted.")
