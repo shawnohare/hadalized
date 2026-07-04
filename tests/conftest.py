@@ -5,16 +5,14 @@ import pytest
 
 from hadalized.color import ColorRep, ColorSpace
 from hadalized.config import Config
+from hadalized.palette import Palette
 
 if TYPE_CHECKING:
-    from hadalized.config import BuildConfig
-    from hadalized.palette import Palette
-
-_config = Config()
+    from hadalized.config import AppConfig
 
 
 @pytest.fixture
-def config(tmp_path) -> Config:
+def config(tmp_path: Path) -> Config:
     return Config(
         state_dir=tmp_path / "state",
         cache_dir=tmp_path / "cache",
@@ -25,15 +23,27 @@ def config(tmp_path) -> Config:
 
 
 @pytest.fixture
+def dry_config(tmp_path: Path) -> Config:
+    return Config(
+        state_dir=tmp_path / "state",
+        cache_dir=tmp_path / "cache",
+        template_dir=Path(__file__).parent,
+        output_dir=tmp_path / "output",
+        verbose=True,
+        dry_run=True,
+    )
+
+
+@pytest.fixture
 def palette() -> Palette:
-    return _config.palettes["dark"].transform(ColorSpace.srgb, ColorRep.info)
+    return Palette.default().transform(ColorSpace.srgb, ColorRep.hex)
 
 
 @pytest.fixture
 def raw_palette() -> Palette:
-    return _config.palettes["dark"]
+    return Palette.default()
 
 
 @pytest.fixture
-def build_config() -> BuildConfig:
-    return _config.builds["neovim"]
+def build_config() -> AppConfig:
+    return Config.builtin_apps["neovim"]

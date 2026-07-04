@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from hadalized.config import _split_template
+from hadalized.config import split_template
 
 
 @pytest.mark.parametrize(
@@ -17,4 +17,4 @@ from hadalized.config import _split_template
     ],
 )
 def test_template_parts(path: Path, expected: tuple[str, str]):
-    assert _split_template(path) == expected
+    assert split_template(path) == expected

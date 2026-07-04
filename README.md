@@ -40,9 +40,9 @@ If the tool is installed via `uv tool install` or if the virtualenv is activated
 
 ```sh
 # To build neovim color themes
-hdl build neovim --out=colors  # -> colors/hadalized*.lua
+hdl build --app=neovim --output-dir=colors --no-prefix  # -> colors/hadalized*.lua
 # To build all color themes, with outputs to `./build`
-hdl build
+hdl build --output-dir=build
 ```
 
 ## Development
@@ -66,7 +66,11 @@ just test
   where an intermediate and generic theme can be defined and referenced in
   editor templates. For example, allow a user to define `integer = "blue"` and
   reference `theme.integer` to color neovim `Integer` highlight groups.
-- [ ]
+- [ ] Separate out application builder configs / builders from palette and
+  themes from the main config. So in this way we can build for a collection of
+  palettes and themes for each app independently of a single configuration
+  file. Maybe this means allowing specification of a `palette-file` and
+  `theme-file` and `build-file`
 
 ## References
 

@@ -2,7 +2,7 @@
 
 from importlib.metadata import version
 from pathlib import Path
-from typing import ClassVar, Literal, Self
+from typing import ClassVar, Literal, Self, override
 
 import xdg_base_dirs
 from pydantic import PrivateAttr
@@ -136,6 +136,7 @@ class BaseNode(BaseSettings):
         """
         return getattr(self, key)
 
+    @override
     def __hash__(self) -> int:
         """Make an instance hashable for use in cache and dict lookups.
 
@@ -204,18 +205,18 @@ class BaseNode(BaseSettings):
 
         """
         # other | self
-        self_fields = set(self.__class__.model_fields.keys())
-        ldump = other.model_dump(exclude_unset=True, include=self_fields)
+        includes = set(self.__class__.model_fields)
+        data = other.model_dump(exclude_unset=True, include=includes)
         for key, rval in self:
             if key not in self.model_fields_set:
                 continue
-            if (lval := ldump.get(key)) is not None and isinstance(
+            if key not in other.model_fields_set or not isinstance(
                 rval, (BaseNode, dict)
             ):
-                ldump[key] = lval | rval
+                data[key] = rval
             else:
-                ldump[key] = rval
-        return self.model_validate(ldump)
+                data[key] = other[key] | rval
+        return self.model_validate(data)
 
 
 class Home:

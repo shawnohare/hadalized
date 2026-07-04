@@ -54,8 +54,6 @@ def test_opts_mutually_exclusive_fields():
     with pytest.raises(ValueError):
         Options(config_file=Path("blah"), no_config=True)
     with pytest.raises(ValueError):
-        Options(cache_in_memory=True, no_cache=True)
-    with pytest.raises(ValueError):
         Options(verbose=True, quiet=True)
 
 

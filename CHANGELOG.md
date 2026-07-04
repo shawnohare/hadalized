@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] -- 2025-03-30
 
-Introduce an initial, experimental theme abstraction `AbstractTheme` that
+Introduce an initial, experimental theme abstraction `Theme` class that
 defines a family of universal `Theme` structures parameterized over palettes.
 The abstract theme model is based heavily on neovim's highlight groups.
 
@@ -45,17 +45,3 @@ forbidden.
 - Introduce proper cli as main entry point via cyclopts.
 - Targetted builds.
 - Lazy `ColorInfo` parsing.
-
-
-## [1.0.0] -- 2021-07-19
-
-### Added
-- devicely.FarosReader can both read from and write to EDF files and directories
-- devicely.FarosReader has as attributes the individual dataframes (ACC, ECG, ...) and not only the joined dataframe
-
-### Changed
-- in devicely.SpacelabsReader, use xml.etree from the standard library instead of third-party "xmltodict"
-- switch from setuptools to Poetry
-
-### Removed
-- removed setup.py because static project files such as pyproject.toml are preferred

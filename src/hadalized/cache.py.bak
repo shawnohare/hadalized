@@ -11,6 +11,9 @@ if TYPE_CHECKING:
 from hadalized.config import Options
 
 
+# WARNING (Deprecated): The code here better serves application state, of which
+# there is essentially none. Caching has been simplified in v0.7 to simply
+# storing files named by their digest.
 class Cache:
     """Caching layer."""
 

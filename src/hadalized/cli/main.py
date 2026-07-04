@@ -1,13 +1,13 @@
 """Application commands."""
 
+import json
 from contextlib import suppress
-from pathlib import Path
 from shutil import rmtree
 
 from cyclopts import App
+from rich import print_json
 
 from hadalized.base import Home
-from hadalized.cache import Cache
 from hadalized.color import ColorRep, ColorSpace
 from hadalized.config import Config, Options, load_config
 from hadalized.writer import ThemeWriter
@@ -23,8 +23,6 @@ state_app = app.command(
     App(name="state", help="Interact with the application state, e.g., built files.")
 )
 
-BUILD_DEFAULTS: Options = Options(output_dir=Path("build"))
-
 
 @app.command
 def build(opt: Options | None = None):
@@ -35,36 +33,32 @@ def build(opt: Options | None = None):
     `./build`.
 
     Usage examples:
-    - hdl build -> build/**/*
-    - hdl build --app=neovim --out=putcolors --no-prefix -> colors/hadalized*.lua
-    - hdl build --out=none -> Built themes only placed in app state dir.
+    - hdl build --output-dir="build"
+    - hdl build --app=neovim --output-dir=colors --no-prefix -> colors/hadalized*.lua
 
     Args:
         opt: Options.
 
     """
-    opt = BUILD_DEFAULTS | (opt or Options())
+    opt = opt or Options()
     config = load_config(opt)
 
     if opt.verbose:
-        from rich import print_json
-
-        print(f"opt fields set {opt.model_fields_set}")
+        print("opt fields set:")
+        print_json(json.dumps(list(opt.model_fields_set)))
         print("Options:")
         print_json(opt.model_dump_json())
     if opt.dry_run:
         print("DRY-RUN. No theme files will be generated or copied.")
     with ThemeWriter(config) as writer:
-        writer.run()
+        info = writer.run()
+        if opt.verbose:
+            print_json(info.model_dump_json())
 
 
 @config_app.command(name="schema")
 def config_schema():
     """Display configuration schema."""
-    import json
-
-    from rich import print_json
-
     print_json(json.dumps(Config.model_json_schema()))
 
 
@@ -105,38 +99,38 @@ def config_init(opts: Options | None = None):
 @config_app.command(name="options")
 def config_options(opts: Options | None = None):
     """Show the configuration `Options` that are loaded."""
-    from rich import print_json
-
     config = load_config(opts)
     print_json(config.opt.model_dump_json())
 
 
-@palette_app.command(name="show")
-def palette_show(
+@palette_app.command(name="info")
+def palette_info(
+    name: str,
     gamut: ColorSpace = ColorSpace.srgb,
-    rep: ColorRep = ColorRep.info,
     opt: Options | None = None,
 ):
-    """Show information about a particular palette.
+    """Show color information for palettes.
 
     Usage examples:
-    - hdl palette show --palette="dark"
-    - hdl palette show display-p3 hex --palette="dark"
+    - hdl palette info --palette="hadalized-dark"
+    - hdl palette info --gamut="display-p3" --palette="hadalized-dark"
 
     Args:
+        name: A named palette.
         gamut: A specifed gamut to parse against. If not provided, the
             gamut defined by the palette is used.
-        rep: Color representation.
         opt: Options
 
     """
-    from rich import print_json
-
     opt = opt or Options()
     config = load_config(opt)
-    for name in opt.include_palettes:
-        palette = config._palette_lu[name].transform(gamut, rep)
-        print_json(palette.model_dump_json())
+    raw_palette = config.palettes[name]
+    parsed = raw_palette.parse(gamut)
+    colors = {
+        k: v.model_dump(mode="json", exclude_unset=True) for k, v in parsed.items()
+    }
+    out = raw_palette.model_dump(mode="json", exclude_unset=True) | colors
+    print_json(json.dumps(out))
 
 
 @cache_app.command(name="clean")
@@ -165,14 +159,9 @@ def cache_dir(opt: Options | None = None):
 @cache_app.command(name="list", alias=["ls"])
 def cache_list(opt: Options | None = None):
     """List the contents of the application cache."""
-    import json
-
-    from rich import print_json
-
     config = load_config(opt)
-
-    with Cache(config.opt) as cache:
-        print_json(json.dumps(cache.get_digests()))
+    files = "\n".join(str(x) for x in config.cache_dir.glob("**/*") if x.is_file())
+    print(files)
 
 
 @state_app.command(name="dir")
@@ -189,15 +178,10 @@ def state_clean(opt: Options | None = None):
     if config.dry_run and not config.quiet:
         print("DRY-RUN. No state files will be deleted.")
     if not config.quiet:
-        # import json
-        #
-        # from rich import print_json
-
         print(f"Clearing {config.state_dir}")
         files = "\n".join(str(x) for x in config.state_dir.glob("**/*") if x.is_file())
         if files:
             print(files)
-        # print_json(json.dumps(files))
     if not config.dry_run:
         with suppress(FileNotFoundError):
             rmtree(config.state_dir)
@@ -218,44 +202,37 @@ def clean(opt: Options | None = None):
     state_clean(opt)
 
 
-@theme_app.command(name="show")
-def theme_show(
+@theme_app.command(name="info")
+def theme_info(
+    palette: str,
     gamut: ColorSpace = ColorSpace.srgb,
-    rep: ColorRep = ColorRep.info,
+    color_rep: ColorRep = ColorRep.hex,
     opt: Options | None = None,
 ):
     """Show information about a particular theme.
 
     Usage examples:
-    - hdl theme show --palette="dark" --theme="hadalized"
-    - hdl theme parse display-p3 hex --palette="dark" --theme="hadalized"
+    - hdl theme info --palette="hadalized-dark" --gamut="srgb" --color-rep="hex"
 
     Args:
-        gamut: A specifed gamut to parse against. If not provided, the
-            gamut defined by the palette is used.
-        rep: Color representation.
-        opt: Options
+        palette: The name of the palette to resolve the theme against.
+        gamut: The colorspace to use.
+        color_rep: Color representation.
+        opt: Additional options
 
     """
-    from rich import print_json
-
     opt = opt or Options()
     config = load_config(opt)
-    for abs_theme, palette in config.pairs():
-        theme = abs_theme.make(palette.transform(gamut, rep))
-        jdata = theme.model_dump_json(exclude_none=True, indent=4)
-        if not opt.output_dir:
-            print_json(jdata)
-        else:
-            fname = f"{theme.fullname}.json"
-            with (opt.output_dir / fname).open("w") as fp:
-                fp.write(jdata)
+
+    raw_palette = config.palettes[palette]
+    theme = config.theme.resolve(raw_palette.transform(gamut, color_rep))
+    jdata = theme.model_dump_json(exclude_unset=True, indent=4)
+    print_json(jdata)
 
 
 # @app.command
 # def debug(opt: Options | None = None):
 #     """Debug things."""
-#     from rich import print_json
 #
 #     config = load_config(opt)
 #     print(f"{config.cache_dir=}")

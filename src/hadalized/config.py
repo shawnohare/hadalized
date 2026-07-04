@@ -1,9 +1,8 @@
 """Module containing all underlying color definitions and gamut info."""
 
 from enum import StrEnum, auto
-from itertools import product
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Self
+from typing import Annotated, Any, ClassVar, Self
 
 from cyclopts.parameter import Parameter
 from pydantic import AfterValidator, Field, PrivateAttr, model_validator
@@ -16,154 +15,29 @@ from pydantic_settings import (
 
 from hadalized.base import BaseNode, Home
 from hadalized.color import ColorRep, ColorSpace
-from hadalized.palette import Palette
-from hadalized.theme import AbstractTheme, T, Theme, ThemeCollection
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-type Context = Theme | ThemeCollection
-
-type ThemeAliases = dict[str, T]
+from hadalized.palette import Palette, PaletteMetadata
+from hadalized.theme import Theme
 
 
-def _split_template(tmpl: Path) -> tuple[str, str]:
-    """Split template path into its effective name and suffix.
+def split_template(path: Path) -> tuple[str, str]:
+    """Parse the template name and non-template suffix.
 
-    Examples:
-        - "shrc" -> ("shrc", "")
-        - "shrc.j2" -> ("shrc", "")
-        - "wezterm.toml" -> ("wezterm.toml", ".toml")
-        - "wezterm.toml.j2" -> ("wezterm.toml", ".toml")
+    Args:
+        path: The template path, e.g. "myapp.toml.jinja"
 
     Returns:
-        The name and suffix pair, ignoring parts that indicate a jinja template.
+        A pair consisting of the template name without template suffix
+        and underlying suffix. For example
+        "myapp.toml.jinja" -> ("myapp.toml", ".toml")
 
     """
-    if tmpl.suffix in {".j2", ".jinja", ".jinja2"}:
-        name = tmpl.stem  # e.g., wezterm.toml.j2 -> wezterm.toml
-        suffix = tmpl.suffixes[-2] if len(tmpl.suffixes) > 1 else ""
+    if path.suffix in {".j2", ".jinja", ".jinja2"}:
+        name = path.stem
+        suffix = path.suffixes[-2] if len(path.suffixes) > 1 else ""
     else:
-        name = tmpl.name
-        suffix = tmpl.suffix
+        name = path.name
+        suffix = path.suffix
     return name, suffix
-
-
-class ContextType(StrEnum):
-    """Values determine which context expose to template when building a theme."""
-
-    theme = auto()
-    """A single Theme instance will be passed to the `context` variable of a
-    template."""
-    full = auto()
-    """A collection of themes will be passed to the `context` variable."""
-
-
-class BuildConfig(BaseNode):
-    """Information about which files should be generatted specific app."""
-
-    name: str = Field(
-        examples=["neovim", "myapp", "html-examples"],
-    )
-    """Application name or category. Controls where"""
-    subdir: str = ""
-    """Build sub-directory where theme files are placed. Defaults to `name`."""
-    template: Path
-    """Template filename relative to the templates directory. When the path
-    suffix indicates a jinja filetype, """
-    filename: str = ""
-    """Output file name, including extension. For builds that target full
-    context (a collection of themes), the default value is the template name,
-    with the suffix indicating a jinja template removed. For applications
-    that expect one theme per file, output names are of the form
-    `{theme.fullname}{template.suffix}`, e.g., "hadalized-dark.toml"
-    """
-    context_type: ContextType = ContextType.theme
-    """The underlying context type to pass to the template."""
-    gamut: ColorSpace = Field(default=ColorSpace.srgb, examples=["display-p3"])
-    """Which gamut to map color definitions into."""
-    color_rep: ColorRep = ColorRep.hex
-    """How each Palette should be transformed when presented as context
-    to the template."""
-    # TODO(?): Consider allowing per-app specification.
-    # palettes: list[str] | None = None
-    # """Palettes to include. Defaults to all defined palettes."""
-    # themes: list[str] | None = None
-    # """Themes to include. Defaults to all defined themes."""
-    # theme_mapping: dict[str, T] = Field(default={})
-    """A map from application specific highlight names to theme field."""
-    _filename: str = PrivateAttr(default="")
-    _subdir: Path = PrivateAttr(default=Path("./"))
-    _template_name: str = PrivateAttr(default="")
-    _template_suffix: str = PrivateAttr(default="")
-
-    def model_post_init(self, context: Any, /) -> None:
-        """Post init."""
-        name, suffix = _split_template(self.template)
-        self._filename = self.filename
-        if not self._filename:
-            match self.context_type:
-                case ContextType.theme:
-                    self._filename = "{theme.fullname}" + suffix
-                case ContextType.full:
-                    self._filename = name
-        self._template_name = name
-        self._template_suffix = suffix
-        self._subdir = Path(self.subdir or self.name)
-
-    def format_path(self, context: Context) -> Path:
-        """File output path relative to build directory.
-
-        Returns:
-            The absolute path where a file should be written.
-
-        """
-        return self._subdir / self._filename.format(theme=context)
-
-    @staticmethod
-    def builtin() -> dict[str, BuildConfig]:
-        """Builtin build configs.
-
-        Returns:
-            The default build instructions used to generate theme files.
-
-        """
-        builds = [
-            BuildConfig(
-                name="neovim",
-                template=Path("neovim.lua.j2"),
-                color_rep=ColorRep.hex,
-                context_type=ContextType.theme,
-                # theme_mapping=utils.Neovim.mapping(),
-            ),
-            BuildConfig(
-                name="wezterm",
-                template=Path("wezterm.toml.j2"),
-                color_rep=ColorRep.hex,
-                context_type=ContextType.theme,
-            ),
-            BuildConfig(
-                name="starship",
-                template=Path("starship.toml"),
-                color_rep=ColorRep.hex,
-                context_type=ContextType.full,
-            ),
-            BuildConfig(
-                name="theme-info",
-                subdir="info",
-                template=Path("theme.json"),
-                color_rep=ColorRep.info,
-                context_type=ContextType.theme,
-            ),
-            BuildConfig(
-                name="theme-html",
-                subdir="info",
-                template=Path("theme.html"),
-                color_rep=ColorRep.css,
-                context_type=ContextType.theme,
-            ),
-        ]
-        return {x.name: x for x in builds}
 
 
 def validate_nullable_path(val: str | Path | None) -> Path | None:
@@ -174,58 +48,116 @@ def validate_nullable_path(val: str | Path | None) -> Path | None:
 
     """
     match str(val).lower():
-        case "null" | "none":
+        case "null" | "none" | "nil":
             out = None
         case _:
             out = Path(val) if isinstance(val, str) else val
     return out
 
 
+class AppConfig(BaseNode):
+    """Information about which files should be generatted specific app."""
+
+    name: str = Field(
+        examples=["neovim", "myapp", "html-examples"],
+    )
+    """Application name or category. Controls where built theme files
+    are cached."""
+    template: Path
+    """Template filename relative to the templates directory. When the path
+    suffix indicates a jinja filetype, """
+    gamut: ColorSpace = Field(default=ColorSpace.srgb, examples=["display-p3"])
+    """The gamut to fit colors to. For example, if the theme targets css
+    a wide gamut might be appropriate. For many terminal applications it
+    is best to use srgb."""
+    color_rep: ColorRep = ColorRep.hex
+    """How each ColorInfo should be transformed when presented as context
+    to the template. Typically indicates which leaf of a ColorInfo to use, e.g.,
+    `"hex"` for chases where the application expects hex color codes."""
+    _template_name: str = PrivateAttr(default="")
+    """Template name ignoring jinja specific parts."""
+    _template_suffix: str = PrivateAttr(default="")
+    """Template suffix ignoring jinja specific parts."""
+
+    def model_post_init(self, context: Any, /) -> None:
+        """Post init."""
+        self._template_name, self._template_suffix = split_template(self.template)
+
+    @property
+    def extension(self) -> str:
+        """The output file extension."""
+        return self._template_suffix
+
+
 @Parameter(name="*")
 class Options(BaseNode):
     """Common options available to all CLI commands and configuration."""
 
-    # fixme: Annotated[
-    #     Path | None,
-    #     Parameter(alias=["--fix"]),
-    #     AfterValidator(validate_nullable_path),
-    # ] = None
     cache_dir: Annotated[Path, Parameter(parse=True)] = Home.cache()
     """Location of cache directory."""
-    config_file: Path | None = None
+    config_file: Annotated[
+        Path | None,
+        Parameter(alias=["--config", "-c"]),
+        AfterValidator(validate_nullable_path),
+    ] = Field(default=None)
     """Specify a toml file to load configuration from. When specified,
     the standard configurations specified in ``UserConfig`` are ignored.
     """
-    cache_in_memory: Annotated[bool, Parameter(negative="")] = False
-    """Whether to use in-memory application cache."""
-    dry_run: Annotated[bool, Parameter(alias="-n", negative="")] = False
+    gamut: ColorSpace | None = Field(default=None, examples=["display-p3"])
+    """The gamut to fit colors to. Overrides the settings in an individual
+    application configuration.
+    """
+    color_rep: Annotated[
+        ColorRep | None,
+        Parameter(alias=["--rep"]),
+    ] = Field(default=None)
+    """How each color should be encoded when presented as context
+    to the template. Overrides the setings in individual application configurations.
+    """
+    dry_run: Annotated[bool, Parameter(alias="-D", negative="")] = False
     """Do not output any files or write to cache."""
     force: Annotated[bool, Parameter(alias="-f", negative="")] = False
-    """Force rewriting of files. If set during theme building, files will
-    be regenerated and cache populated."""
+    """Force generation of application theme files. If set during theme
+    building, cache is ignored.
+    """
     no_cache: Annotated[bool, Parameter(negative="")] = False
-    """Ignore cache completely. If set during theme building, hash digests
-    of generated files will not be cached."""
+    """Ignore cache completely."""
     no_config: Annotated[bool, Parameter(negative="")] = False
     """Do not read settings from user config files. Implies `--no-templates`."""
     no_templates: Annotated[bool, Parameter(negative="")] = False
     """Ignore user defined templates. Implied by `--no-config`."""
     output_dir: Annotated[
         Path | None,
-        Parameter(alias=["--output", "--out", "-o"]),
+        Parameter(alias=["--outdir", "-d"]),
         AfterValidator(validate_nullable_path),
     ] = Field(
         default=None,
         examples=[Path("./build"), Path("./colors")],
     )
-    """Directory to copy built theme files to or output files."""
-    include_builds: Annotated[
+    """Directory to write built theme files. By default, each application's
+    theme files are included in a subdirectory of this directory, unless the
+    ``no-prefix`` flag is set."""
+    output_name: Annotated[
+        Path | None,
+        Parameter(alias=["--outname", "-n"]),
+        AfterValidator(validate_nullable_path),
+    ] = Field(
+        default=None,
+        examples=[Path("./starship.toml"), Path("./colors/mytheme.lua")],
+    )
+    """Name of the output theme file. Can be set when building a
+    single theme file by specifying one application and one palette.
+    """
+    include_apps: Annotated[
         set[str],
         Parameter(name="app", alias=["-a"], negative=""),
-    ] = Field(default=set())
-    """Application themes to build. The elements must correspond to a
-    ``Config.builds`` item name, which is typically an application name.
-    If not specified, all applications in ``Config.builds`` will be
+    ] = Field(
+        default=set(),
+        examples=[{"neovim"}],
+    )
+    """Application theme files to build. The elements must correspond to a
+    ``Config.apps`` key, which is typically an application name.
+    If not specified, theme files for all applications in ``Config.apps`` will be
     generated.
     """
     include_palettes: Annotated[
@@ -233,14 +165,8 @@ class Options(BaseNode):
         Parameter(name="palette", alias=["-p"], negative=""),
     ] = Field(default=set())
     """Palettes to include when building application theme files. The
-    items must be palette names. If not specified, all palettes will be used.
-    """
-    include_themes: Annotated[
-        set[str],
-        Parameter(name="theme", alias=["-t"], negative=""),
-    ] = Field(default=set())
-    """Defined abstract themes to include when building application theme files.
-    The items must theme names. If not specified, all themes will be used.
+    items must be a key in ``Config.palettes``. If not specified, theme files
+    for each palette will be generated.
     """
     prefix: Annotated[bool, Parameter()] = True
     """When set in conjunction with an output directory, built themes will
@@ -249,7 +175,7 @@ class Options(BaseNode):
     quiet: Annotated[bool, Parameter(alias="-q", negative="")] = False
     """Suppress logging to stdout."""
     state_dir: Annotated[Path, Parameter(parse=True)] = Home.state()
-    """Directory containing application state such as built theme files."""
+    """Directory containing application state."""
     template_dir: Annotated[Path, Parameter(parse=True)] = Home.template()
     """Directory where templates will be searched for initially. If a template
     is not found in this directory, it will be loaded from those defined in the
@@ -270,16 +196,16 @@ class Options(BaseNode):
         """
         if self.verbose and self.quiet:
             raise ValueError("Cannot set both verbose and quiet.")
-        if self.no_cache and self.cache_in_memory:
-            raise ValueError("Cannot set both no_cache and cache_in_memory.")
         if self.no_config and self.config_file:
             raise ValueError("Cannot set both no_config and config_file.")
+        if self.output_dir and self.output_name:
+            raise ValueError("Cannot set both output_dir and output_name.")
         return self
 
     @property
     def build_dir(self) -> Path:
-        """Location of built theme files."""
-        return self.state_dir / "build"
+        """Location of cached theme files."""
+        return self.cache_dir / "build"
 
     @property
     def use_cache(self) -> bool:
@@ -295,7 +221,7 @@ class Options(BaseNode):
         """
         return not self.no_config and not self.no_templates
 
-    def is_included(self, inst: BuildConfig | Palette | AbstractTheme) -> bool:
+    def is_included(self, inst: AppConfig | Palette) -> bool:
         """Determine whether the instance name is in an include list.
 
         Returns:
@@ -303,13 +229,76 @@ class Options(BaseNode):
 
         """
         match inst:
-            case BuildConfig():
-                includes = self.include_builds
+            case AppConfig():
+                includes = self.include_apps
+                name = inst.name
             case Palette():
                 includes = self.include_palettes
-            case AbstractTheme():
-                includes = self.include_themes
-        return not includes or inst.name in includes
+                name = inst.name
+            # case Theme():
+            #     includes = self.include_themes
+            #     name = inst.meta.name
+        return not includes or name in includes
+
+
+class Colors:
+    """Builtin color definitions."""
+
+    # blues, high chroma
+    blue12: str = "oklch(0.125 0.0225 220)"
+    blue13: str = "oklch(0.130 0.030 220)"
+    blue14: str = "oklch(0.140 0.030 220)"
+    blue16: str = "oklch(0.1625 0.030 220)"
+    blue20: str = "oklch(0.200 .030 220)"
+    blue25: str = "oklch(0.250 .030 220)"
+    blue30: str = "oklch(0.300 .035 220)"
+    blue35: str = "oklch(0.350 .035 220)"
+    # grays, mid / low chroma
+    gray10: str = "oklch(0.100 .010 220)"
+    gray12: str = "oklch(0.125 .010 220)"
+    gray13: str = "oklch(0.130 .010 220)"
+    gray14: str = "oklch(0.140 .010 220)"
+    gray16: str = "oklch(0.160 .010 220)"
+    gray20: str = "oklch(0.200 .010 220)"
+    gray25: str = "oklch(0.250 .010 220)"
+    gray30: str = "oklch(0.300 .010 220)"
+    gray35: str = "oklch(0.350 .010 220)"
+    gray40: str = "oklch(0.40 .010 220)"
+    gray45: str = "oklch(0.450 .010 220)"
+    gray50: str = "oklch(0.500 .010 220)"
+    gray55: str = "oklch(0.550 .010 220)"
+    gray60: str = "oklch(0.600 .010 220)"
+    gray65: str = "oklch(0.650 .010 220)"
+    gray70: str = "oklch(0.700 .010 220)"
+    gray75: str = "oklch(0.750 .010 220)"
+    gray80: str = "oklch(0.800 .005 220)"
+    gray85: str = "oklch(0.850 .005 100)"
+    gray90: str = "oklch(0.900 .005 220)"
+    gray91: str = "oklch(0.910 .005 100)"
+    gray92: str = "oklch(0.925 .005 100)"
+    gray95: str = "oklch(0.950 .005 100)"
+    gray97: str = "oklch(0.975 .005 100)"
+    gray99: str = "oklch(0.990 .005 100)"
+    gray100: str = "oklch(0.995 .005 100)"
+    # Sun / Day high chroma
+    sun12: str = "oklch(0.125 .020 100)"
+    sun14: str = "oklch(0.14 .020 100)"
+    sun16: str = "oklch(0.16 .020 100)"
+    sun20: str = "oklch(0.200 .020 100)"
+    sun30: str = "oklch(0.300 .020 100)"
+    sun40: str = "oklch(0.400 .020 100)"
+    sun50: str = "oklch(0.500 .020 100)"
+    sun60: str = "oklch(0.600 .020 100)"
+    sun70: str = "oklch(0.700 .020 100)"
+    sun80: str = "oklch(0.800 .020 100)"
+    sun85: str = "oklch(0.850 .020 100)"
+    sun90: str = "oklch(0.900 .020 100)"
+    sun91: str = "oklch(0.910 .020 100)"
+    sun92: str = "oklch(0.925 .020 100)"
+    sun95: str = "oklch(0.950 .020 100)"
+    sun97: str = "oklch(0.975 .015 100)"
+    sun99: str = "oklch(0.990 .010 100)"
+    sun100: str = "oklch(0.995 .010 100)"
 
 
 class Config(Options):
@@ -322,19 +311,124 @@ class Config(Options):
     init arguments, and as such serves as a default Config base.
     """
 
-    builds: dict[str, BuildConfig] = Field(default=BuildConfig.builtin())
-    """Build directives specifying how and which theme files are
-    generated."""
-    palettes: dict[str, Palette] = Field(default=Palette.builtin())
-    """Palette color definitions."""
-    themes: dict[str, AbstractTheme] = Field(
-        default={"default": AbstractTheme.builtin()},
+    builtin_colors: ClassVar[type] = Colors
+
+    builtin_palette_dark: ClassVar[Palette] = Palette(
+        meta=PaletteMetadata(
+            name="hadalized-dark",
+            desc="Main dark palette with darker solarized inspired bases.",
+            version="2.1",
+            mode="dark",
+        ),
     )
+
+    builtin_palette_gray: ClassVar[Palette] = Palette(
+        meta=PaletteMetadata(
+            name="hadalized-gray",
+            desc="Dark theme variant with more grayish backgrounds.",
+            version="2.1",
+            mode="dark",
+        ),
+        base00=Colors.gray13,
+        base01=Colors.gray14,
+        base02=Colors.gray16,
+        base03=Colors.gray20,
+        base04=Colors.gray25,
+        base05=Colors.gray30,
+        base06=Colors.gray35,
+    )
+
+    builtin_palette_day: ClassVar[Palette] = Palette(
+        meta=PaletteMetadata(
+            name="hadalized-day",
+            desc="Light theme variant with sunny backgrounds.",
+            version="2.1",
+            mode="light",
+        ),
+        red="oklch(0.550 0.185 25)",
+        orange="oklch(0.650 0.150 60)",
+        yellow="oklch(0.650 0.120 100)",
+        lime="oklch(0.650 0.130 115)",
+        green="oklch(0.575 0.165 130)",
+        mint="oklch(0.650 0.130 155)",
+        cyan="oklch(0.550 0.100 180)",
+        azure="oklch(0.650 0.110 225)",
+        blue="oklch(0.575 0.140 250)",
+        violet="oklch(0.550 0.185 290)",
+        magenta="oklch(0.550 0.185 330)",
+        rose="oklch(0.625 0.100 360)",
+        base00=Colors.sun100,
+        base01=Colors.sun99,
+        base02=Colors.sun95,
+        base03=Colors.sun92,
+        base04=Colors.sun99,
+        base05=Colors.sun85,
+        base06=Colors.sun80,
+        base07=Colors.gray75,
+        base09=Colors.gray60,
+        base10=Colors.gray50,
+        base11=Colors.gray40,
+        base12=Colors.gray30,
+        base13=Colors.blue20,
+        base14=Colors.blue16,
+        base15=Colors.blue12,
+    )
+
+    builtin_palette_light: ClassVar[Palette] = builtin_palette_day | Palette(
+        meta=PaletteMetadata(
+            name="hadalized-light",
+            desc="Light theme variant with whiter backgrounds.",
+            version="2.1",
+            mode="light",
+        ),
+        base00=Colors.gray100,
+        base01=Colors.gray99,
+        base02=Colors.gray95,
+        base03=Colors.gray92,
+        base04=Colors.gray99,
+        base05=Colors.gray85,
+        base06=Colors.gray80,
+    )
+
+    builtin_palettes: ClassVar[dict[str, Palette]] = {
+        builtin_palette_dark.name: builtin_palette_dark,
+        builtin_palette_light.name: builtin_palette_light,
+        builtin_palette_gray.name: builtin_palette_gray,
+        builtin_palette_day.name: builtin_palette_day,
+    }
+
+    builtin_apps: ClassVar[dict[str, AppConfig]] = {
+        "neovim": AppConfig(
+            name="neovim",
+            template=Path("neovim.lua.jinja"),
+            color_rep=ColorRep.hex,
+            # theme_mapping=utils.Neovim.mapping(),
+        ),
+        "wezterm": AppConfig(
+            name="wezterm",
+            template=Path("wezterm.toml.jinja"),
+            color_rep=ColorRep.hex,
+        ),
+        "starship": AppConfig(
+            name="starship",
+            template=Path("starship.toml.jinja"),
+            color_rep=ColorRep.hex,
+        ),
+        "theme-html": AppConfig(
+            name="theme-html",
+            template=Path("theme.html"),
+            color_rep=ColorRep.css,
+        ),
+    }
+
+    apps: dict[str, AppConfig] = Field(default=builtin_apps)
+    """Build directives specifying how and which theme files are
+    generated for a specific application."""
+    palettes: dict[str, Palette] = Field(default=builtin_palettes)
+    """Palette color definitions."""
+    theme: Theme = Field(default=Theme())
     """Abstract themes referencing generic palette fields."""
     _opts: Options | None = PrivateAttr(default=None)
-    _palette_lu: dict[str, Palette] = PrivateAttr(default={})
-    _build_lu: dict[str, BuildConfig] = PrivateAttr(default={})
-    _theme_lu: dict[str, AbstractTheme] = PrivateAttr(default={})
 
     @classmethod
     def settings_customise_sources(
@@ -353,27 +447,16 @@ class Config(Options):
         """
         return (init_settings,)
 
-    def model_post_init(self, context: Any, /) -> None:
-        """Post init.
-
-        - Set lookups.
-
-        """
-        self._palette_lu = self.palettes | {x.name: x for x in self.palettes.values()}
-        self._build_lu = self.builds | {x.name: x for x in self.builds.values()}
-        self._theme_lu = self.themes | {x.name: x for x in self.themes.values()}
-        return super().model_post_init(context)
-
-    def pairs(self) -> Iterator[tuple[AbstractTheme, Palette]]:
-        """Theme, palette pairs.
-
-        Yields:
-            An abstract theme, palette pair provided both are included.
-
-        """
-        for theme, palette in product(self.themes.values(), self.palettes.values()):
-            if self.is_included(theme) and self.is_included(palette):
-                yield (theme, palette)
+    # def model_post_init(self, context: Any, /) -> None:
+    #     """Post init.
+    #
+    #     - Set lookups.
+    #
+    #     """
+    #     for bconf in BUILTIN_APP_CONFIGS:
+    #         if bconf.name not in self.apps:
+    #             self.apps[bconf.name] = bconf
+    #     return super().model_post_init(context)
 
     @property
     def opt(self) -> Options:
@@ -415,7 +498,7 @@ class UserConfig(Config):
         nested_model_default_partial_update=True,
         toml_file=[
             Home.config() / "config.toml",
-            Home.config() / "builds.toml",
+            Home.config() / "apps.toml",
             Home.config() / "palettes.toml",
             Home.config() / "themes.toml",
             Home.config() / "overrides.toml",

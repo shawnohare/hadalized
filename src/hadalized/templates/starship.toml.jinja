@@ -218,16 +218,13 @@ disabled = false
 show_notifications = true
 min_time_to_notify = 45000
 
-{% for thm in context.themes %}
-{% set pal = thm.palette-%}
-[palettes."{{ thm.fullname }}"]
-name = "{{ thm.fullname }}"
-mode = "{{ pal.mode }}"
-gamut = "{{ build.gamut }}"
-{% for field, color in thm.colors()-%}
+[palettes."{{ palette.name }}"]
+name = "{{ palette.name }}"
+mode = "{{ palette.mode }}"
+gamut = "{{ app.gamut }}"
+{% for field, color in theme.colors -%}
 {{ field }} = "{{ color }}"
 {% endfor -%}
-{% for field, color in pal.colors()-%}
+{% for field, color in palette.colors() -%}
 {{ field }} = "{{ color }}"
 {% endfor -%}
-{% endfor %}

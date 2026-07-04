@@ -1,12 +1,10 @@
-{% set thm = context -%}
-{% set pal = thm.palette -%}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colors for {{thm.fullname}}</title>
+    <title>Colors for {{ theme.name }}</title>
 </head>
 
 <style>
@@ -33,7 +31,7 @@ tbody tr:nth-child(odd) {
 
 </style>
 
-<h1>Theme Metadata for {{ thm.name }}</h1>
+<h1>Palette Metadata for {{ theme.name }}</h1>
 
 <table>
   <thead>
@@ -43,7 +41,7 @@ tbody tr:nth-child(odd) {
     </tr>
   </thead>
   <tbody>
-    {% for field, value in thm.meta() -%}
+    {% for field, value in palette.meta -%}
     <tr>
       <td>{{ field }}</td>
       <td>{{ value }}</td>
@@ -52,7 +50,26 @@ tbody tr:nth-child(odd) {
   </tbody>
 </table>
 
-<h1>Theme Colors for {{ thm.name }}</h1>
+<h1>Theme Metadata for {{ theme.name }}</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for field, value in theme.meta -%}
+    <tr>
+      <td>{{ field }}</td>
+      <td>{{ value }}</td>
+    </tr>
+    {% endfor -%}
+  </tbody>
+</table>
+
+<h1>Palette {{ palette.name }}</h1>
 <table>
   <thead>
     <tr>
@@ -61,13 +78,31 @@ tbody tr:nth-child(odd) {
     </tr>
   </thead>
   <tbody>
-    {% for field, color in thm.colors() -%}
+    {% for field, color in palette.colors() -%}
     <tr>
         <td>{{ field }}</td>
         <td><div class="box" style="background: {{ color }}"/></td>
     </tr>
     {% endfor -%}
-    {% for field, style in thm.styles() -%}
+  </tbody>
+</table>
+
+<h1>Theme Colors for {{ theme.name }}</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Color</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for field, color in theme.colors -%}
+    <tr>
+        <td>{{ field }}</td>
+        <td><div class="box" style="background: {{ color }}"/></td>
+    </tr>
+    {% endfor -%}
+    {% for field, style in theme.styles() -%}
     <tr>
         <td>{{ field }}.fg</td>
         <td><div class="box" style="background: {{ style.fg }}"/></td>

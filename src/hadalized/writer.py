@@ -4,7 +4,7 @@ from contextlib import suppress
 from functools import cache
 from hashlib import blake2b
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar, final, override
 
 from jinja2 import (
     Environment,
@@ -16,35 +16,63 @@ from jinja2 import (
     select_autoescape,
 )
 from loguru import logger
+from pydantic import BaseModel
 
 from hadalized import utils
-from hadalized.base import APP_NAME
-from hadalized.cache import Cache
-from hadalized.config import ContextType
-from hadalized.theme import ThemeCollection
+from hadalized.base import APP_NAME, BaseNode
+from hadalized.config import AppConfig, Config, Options
+from hadalized.palette import Palette, PaletteMetadata  # noqa: TC001
+from hadalized.theme import Theme  # noqa: TC001
 
-if TYPE_CHECKING:
-    from hadalized.config import BuildConfig, Config, Context
+
+class Context(BaseNode):
+    """Main context data passed to a template."""
+
+    palette: Palette
+    """Palette with application specific transformation applied."""
+    theme: Theme
+    """Concrete theme with colors resolved against the `palette`."""
+    app: AppConfig
+    """Application specific build configuration."""
+
+    @override
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+
+class FileBuildInfo(BaseModel):
+    """Information about a built theme file."""
+
+    app: AppConfig
+    palette_meta: PaletteMetadata
+    path: Path
+    digest: str
+    cache_used: bool
+    copy_path: Path | None
+
+
+class RunInfo(BaseModel):
+    """Information about a run of a ThemeWritter instance."""
+
+    opt: Options
+    files: list[FileBuildInfo]
 
 
 @cache
-def _encode(val: Template | Context) -> bytes:
-    if isinstance(val, Template):
-        data: bytes = b"null"
-        if (fname := val.filename) is not None:
-            with suppress(FileNotFoundError):
-                data = Path(fname).read_bytes()
-    else:
-        data = val.model_dump_json().encode()
-
+def _encode_template(val: Template) -> bytes:
+    data: bytes = b"null"
+    if (fname := val.filename) is not None:
+        with suppress(FileNotFoundError):
+            data = Path(fname).read_bytes()
     return data
 
 
 def _hash(template: Template, context: Context) -> str:
-    data = _encode(template) + b":::" + _encode(context)
+    data = _encode_template(template) + b":" + context.model_dump_json().encode()
     return blake2b(data, digest_size=32).hexdigest()
 
 
+@final
 class ThemeWriter:
     """Generate application theme files."""
 
@@ -65,34 +93,13 @@ class ThemeWriter:
             config: A configuration instance if customization is required.
 
         """
-        # Filter out excluded items.
-        # self.palettes = [x for x in config.palettes.values() if config.is_included(x)]
-        self.builds = [x for x in config.builds.values() if config.is_included(x)]
-        # self.themes = [x for x in config.themes.values() if config.is_included(x)]
-
-        self.cache = Cache(config)
+        # self.cache: Cache = Cache(config)
         self._fs_template_env = Environment(
             loader=FileSystemLoader(searchpath=config.template_dir),
             undefined=StrictUndefined,
             autoescape=select_autoescape("html", "xml"),
         )
-        self.config = config
-
-    def _must_build(self, path: Path, digest: str) -> bool:
-        """Whether a particular file has been generated.
-
-        Returns:
-            A bool indicating that a theme template file should be regenerated.
-            This can either because the user forces a rebuild, ignores the
-            cache, or the output of an existing build would change.
-
-        """
-        return (
-            self.config.force
-            or self.config.no_cache
-            or not path.exists()
-            or self.cache.get(path) != digest
-        )
+        self.config: Config = config
 
     def get_template(self, name: str | Path) -> Template:
         """Load theme template.
@@ -111,37 +118,29 @@ class ThemeWriter:
                 template = self._package_template_env.get_template(tname)
         return template
 
-    def copy_file(self, build_path: Path) -> Path | None:
-        """Copy a built theme file to an output directory.
-
-        Args:
-            build_path: Path to a built theme file, typically saved in
-                the applicate state directory.
-
-        Returns:
-            The path of the copied file or None if no copy was performed.
-
-        """
+    def _copy_file(self, context: Context, build_path: Path) -> Path | None:
         opt = self.config
-        if opt.output_dir is None:
+        app = context.app
+
+        if opt.output_name is not None:
+            copy_path = opt.output_name.absolute()
+        elif opt.output_dir is not None:
+            output_dir = opt.output_dir / app.name
+            if not opt.prefix:
+                output_dir = output_dir.parent
+            fname = context.palette.name + app.extension
+            copy_path = (output_dir / fname).absolute()
+        else:
             return None
 
-        output_dir = opt.output_dir
-        if opt.prefix:
-            output_dir /= build_path.parent.name
-        copy_path = (output_dir / build_path.name).absolute()
         if not opt.quiet:
-            logger.info(f"Copying {build_path} to {output_dir}")
+            logger.info(f"Copying {build_path} to {copy_path}")
         if not opt.dry_run:
-            output_dir.mkdir(parents=True, exist_ok=True)
-            build_path.copy(copy_path)
+            copy_path.parent.mkdir(parents=True, exist_ok=True)
+            _ = build_path.copy(copy_path)
         return copy_path
 
-    def build_file(
-        self,
-        bconf: BuildConfig,
-        context: Context,
-    ) -> tuple[Path, bool]:
+    def build_file(self, context: Context) -> FileBuildInfo:
         """Build a single color theme file.
 
         When an output dir is specified, the generated file is copied to
@@ -151,68 +150,94 @@ class ThemeWriter:
             A path of the built file and whether it was generated.
 
         """
+        app = context.app
         opt = self.config
-        template = self.get_template(bconf.template)
-        path = self.config.build_dir / bconf.format_path(context)
+        template = self.get_template(app.template)
         digest = _hash(template, context)
+        path = opt.build_dir / digest
 
-        if self._must_build(path, digest):
+        # Generate file and write to build dir if necessary.
+        if opt.force or opt.no_cache or not path.exists():
             if not opt.quiet:
-                logger.info(f"Building {path} {digest}.")
-            text = template.render(context=context, build=bconf, utils=utils)
+                logger.info(f"Building {path}.")
+            text = template.render(
+                theme=context.theme,
+                palette=context.palette,
+                app=context.app,
+                config=self.config,
+                utils=utils,
+            )
             if not opt.dry_run:
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(text, encoding="utf-8")
-            if opt.use_cache and not opt.dry_run:
-                self.cache.add(path, digest)
+                _ = path.write_text(text, encoding="utf-8")
             was_built = True
         else:
             if opt.verbose:
-                logger.info(f"Already built {path} with hash {digest}.")
+                logger.info(f"Already built {path}.")
             was_built = False
 
-        self.copy_file(path)
-        return path, was_built
+        copy_path = self._copy_file(context, path)
 
-    def build(self, bconf: BuildConfig) -> list[Path]:
-        """Generate color theme files for a specific app.
+        return FileBuildInfo(
+            app=app,
+            palette_meta=context.palette.meta,
+            path=path,
+            cache_used=not was_built,
+            copy_path=copy_path,
+            digest=digest,
+        )
+
+    def build(self, app_config: AppConfig) -> list[FileBuildInfo]:
+        """Generate color theme files for a specific application.
 
         Args:
-            bconf: A configuration specifying how theme files shoud be built.
+            app_config: A configuration specifying how theme files shoud be built.
 
         Returns:
-            A list of theme file paths that were built.
+            A list of theme file paths and an indicator which was built.
 
         """
         opt = self.config
+
+        # Apply config overrides to application config if necessary.
+        if opt.gamut or opt.color_rep:
+            app_config |= AppConfig(
+                name=app_config.name,
+                template=app_config.template,
+                gamut=opt.gamut or app_config.gamut,
+                color_rep=opt.color_rep or app_config.color_rep,
+            )
+
+        def make_context(raw_palette: Palette) -> Context:
+            palette = raw_palette.transform(app_config.gamut, app_config.color_rep)
+            return Context(
+                palette=palette,
+                theme=opt.theme.resolve(palette),
+                app=app_config,
+            )
+
         if opt.verbose:
-            logger.info(f"Handling themes for {bconf.name}.")
-
-        themes = (
-            theme.make(pal.transform(bconf.gamut, bconf.color_rep))
-            for theme, pal in self.config.pairs()
-        )
-
-        match bconf.context_type:
-            case ContextType.theme:
-                contexts = themes
-            case ContextType.full:
-                contexts = [ThemeCollection(themes=tuple(themes))]
-
+            logger.info(f"Handling themes for {app_config.name}.")
         return [
-            path
-            for path, was_built in (self.build_file(bconf, ctx) for ctx in contexts)
-            if was_built
+            self.build_file(make_context(p))
+            for p in self.config.palettes.values()
+            if self.config.is_included(p)
         ]
 
-    def run(self) -> list[Path]:
+    def run(self) -> RunInfo:
         """Generate all relevant app theme files.
 
         Returns:
             A list of file paths that were generated.
 
         """
-        return [p for paths in (self.build(x) for x in self.builds) for p in paths]
+        config = self.config
+        builds = (self.build(x) for x in config.apps.values() if config.is_included(x))
+        files = [p for paths in builds for p in paths]
+        return RunInfo(
+            opt=config.opt,
+            files=files,
+        )
 
     def __enter__(self):
         """Connect to the cache.
@@ -221,13 +246,15 @@ class ThemeWriter:
             The instance with a connection to the cache db.
 
         """
-        if self.config.use_cache:
-            self.cache.connect()
+        # NOTE: Could be useful to keep around for storing application state.
+        # if self.config.use_cache:
+        #     self.cache.connect()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Close cache db connection."""
         if exc_type is not None:
             logger.error((exc_type, exc_value, traceback))
-        if self.config.use_cache:
-            self.cache.close()
+        # NOTE: Could be useful to keep around for storing application state.
+        # if self.config.use_cache:
+        #     self.cache.close()
